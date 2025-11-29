@@ -9,3 +9,8 @@ zapis tokenu:
 ```
 git config --global credential.helper store
 ```
+
+odpalenie frontendu, w głównym katalogu:
+```
+docker compose up --build
+```
