@@ -1,10 +1,12 @@
 import React, { useRef } from 'react';
+import { WebSocketProvider } from './context/WebSocketContext';
 import Header from './components/Header';
 import EventList from './components/EventList';
 import Calendar from './components/Calendar';
 import ActionButtons from './components/ActionButtons';
 import TopNav from './components/TopNav';
 import Chat from './components/Chat';
+import ConnectionStatus from './components/ConnectionStatus';
 
 function App() {
   const chatRef = useRef(null);
@@ -14,9 +16,14 @@ function App() {
   };
 
   return (
-    <>
+    <WebSocketProvider>
       <TopNav onChatClick={scrollToChat} />
       <div className="container">
+        {/* Connection Status */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+          <ConnectionStatus />
+        </div>
+
         <Header />
         <div className="content-grid">
           <div className="main-content">
@@ -24,7 +31,7 @@ function App() {
           </div>
           <div className="sidebar">
             <Calendar />
-            <ActionButtons />
+            <ActionButtons scrollToChat={scrollToChat} />
           </div>
         </div>
 
@@ -34,7 +41,7 @@ function App() {
           <Chat />
         </div>
       </div>
-    </>
+    </WebSocketProvider>
   );
 }
 

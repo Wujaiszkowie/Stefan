@@ -61,6 +61,7 @@ pids/
 # react-scripts coverage
 
 coverage/
+.claude
 
 # Misc
 
