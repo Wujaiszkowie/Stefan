@@ -1,26 +1,29 @@
 import React from 'react';
 
-const NavItem = ({ icon, label, isActive }) => {
+const NavItem = ({ icon, label, isActive, onClick }) => {
     const color = isActive ? '#4B6EF6' : '#6B7280';
 
     return (
-        <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            cursor: 'pointer',
-            color: color,
-            padding: '8px 16px',
-            borderRadius: '8px',
-            backgroundColor: isActive ? '#EFF6FF' : 'transparent',
-            transition: 'all 0.2s'
-        }}>
+        <div
+            onClick={onClick}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                cursor: 'pointer',
+                color: color,
+                padding: '8px 16px',
+                borderRadius: '8px',
+                backgroundColor: isActive ? '#EFF6FF' : 'transparent',
+                transition: 'all 0.2s'
+            }}
+        >
             {icon(color)}
             <span style={{ fontSize: '14px', marginLeft: '8px', fontWeight: '600' }}>{label}</span>
         </div>
     );
 };
 
-const TopNav = () => {
+const TopNav = ({ onChatClick }) => {
     return (
         <div className="top-nav" style={{
             backgroundColor: 'white',
@@ -37,6 +40,7 @@ const TopNav = () => {
                 <NavItem
                     label="Home"
                     isActive={true}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                     icon={(color) => (
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -46,8 +50,20 @@ const TopNav = () => {
                 />
 
                 <NavItem
+                    label="Chat"
+                    isActive={false}
+                    onClick={onChatClick}
+                    icon={(color) => (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    )}
+                />
+
+                <NavItem
                     label="Calendar"
                     isActive={false}
+                    onClick={() => { }}
                     icon={(color) => (
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -59,20 +75,9 @@ const TopNav = () => {
                 />
 
                 <NavItem
-                    label="Care Team"
-                    isActive={false}
-                    icon={(color) => (
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        </svg>
-                    )}
-                />
-
-                <NavItem
                     label="Settings"
                     isActive={false}
+                    onClick={() => { }}
                     icon={(color) => (
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="12" cy="12" r="3"></circle>
