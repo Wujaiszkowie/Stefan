@@ -31,6 +31,9 @@ function App() {
         style={{ width: "300px", marginRight: "10px" }}
       />
       <button onClick={sendPrompt}>Send</button>
+      <div className="bg-gray-100 min-h-screen flex itemsś-center justify-center">
+        <h1 className="text-4xl text-blue-500">Hej z Tailwind + React!</h1>
+        </div>
     </div>
   );
 }
