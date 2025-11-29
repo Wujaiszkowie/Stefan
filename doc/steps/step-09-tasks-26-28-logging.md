@@ -1,7 +1,7 @@
 
 # Step 09: Logging & Error Handling (Tasks 26-28)
 
-**Status:** PENDING
+**Status:** DONE
 **Tasks:** 26, 27, 28
 
 ---
@@ -74,10 +74,10 @@ private void log(String level, String module, String message, Object details) {
 ```
 
 ### Acceptance Criteria
-- [ ] Logs written to `backend_logs` table
-- [ ] Also outputs to console
-- [ ] Details stored as JSON
-- [ ] All modules use consistent logging
+- [x] Logs written to `backend_logs` table
+- [x] Also outputs to console
+- [x] Details stored as JSON
+- [x] All modules use consistent logging
 
 ---
 
@@ -157,10 +157,10 @@ void onMessage(String message, WebSocketConnection connection) {
 ```
 
 ### Acceptance Criteria
-- [ ] All errors logged to database
-- [ ] User-friendly messages in Polish
-- [ ] Error codes for debugging
-- [ ] No stack traces sent to client
+- [x] All errors logged to database
+- [x] User-friendly messages in Polish
+- [x] Error codes for debugging
+- [x] No stack traces sent to client
 
 ---
 
@@ -226,13 +226,13 @@ record ComponentStatus(
 ```
 
 ### Final Checklist
-- [ ] Old `org.acme` package removed
-- [ ] All `com.wspiernik` packages created
-- [ ] Health endpoint working
-- [ ] Application starts without errors
-- [ ] WebSocket endpoint accessible
-- [ ] Database file created
-- [ ] Scenarios seeded
+- [x] Old `org.acme` package removed
+- [x] All `com.wspiernik` packages created
+- [x] Health endpoint working
+- [x] Application starts without errors
+- [x] WebSocket endpoint accessible
+- [x] Database file created
+- [x] Scenarios seeded
 
 ### Smoke Test
 ```bash
@@ -250,10 +250,10 @@ wscat -c ws://localhost:8080/ws
 ```
 
 ### Acceptance Criteria
-- [ ] Clean project structure
-- [ ] All endpoints accessible
-- [ ] No compilation errors
-- [ ] Basic smoke test passes
+- [x] Clean project structure
+- [x] All endpoints accessible
+- [x] No compilation errors
+- [x] Basic smoke test passes
 
 ---
 

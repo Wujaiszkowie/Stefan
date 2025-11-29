@@ -37,6 +37,9 @@ public class WspiernikSocket {
     @Inject
     MessageDispatcher messageDispatcher;
 
+    @Inject
+    WebSocketErrorHandler errorHandler;
+
     @OnOpen
     public void onOpen(WebSocketConnection connection) {
         String connectionId = connection.id();
@@ -49,16 +52,39 @@ public class WspiernikSocket {
         String connectionId = connection.id();
         LOG.debugf("WebSocket message from %s: %s", connectionId, message);
 
+        String requestId = extractRequestId(message);
+
         try {
             IncomingMessage incomingMessage = objectMapper.readValue(message, IncomingMessage.class);
             messageDispatcher.dispatch(incomingMessage, connection);
         } catch (JsonProcessingException e) {
             LOG.warnf("Failed to parse message from %s: %s", connectionId, e.getMessage());
-            sendError(connection, "Invalid JSON format: " + e.getMessage(), ErrorPayload.CODE_PARSE_ERROR, null);
+            errorHandler.handleError(connection, e, requestId);
         } catch (Exception e) {
             LOG.errorf(e, "Error processing message from %s", connectionId);
-            sendError(connection, "Internal error: " + e.getMessage(), ErrorPayload.CODE_INTERNAL_ERROR, null);
+            errorHandler.handleError(connection, e, requestId);
         }
+    }
+
+    /**
+     * Try to extract request_id from raw message for error responses.
+     */
+    private String extractRequestId(String message) {
+        try {
+            // Simple extraction without full parsing
+            if (message.contains("request_id")) {
+                int start = message.indexOf("request_id");
+                int colonPos = message.indexOf(":", start);
+                int quoteStart = message.indexOf("\"", colonPos);
+                int quoteEnd = message.indexOf("\"", quoteStart + 1);
+                if (quoteStart > 0 && quoteEnd > quoteStart) {
+                    return message.substring(quoteStart + 1, quoteEnd);
+                }
+            }
+        } catch (Exception e) {
+            // Ignore extraction errors
+        }
+        return null;
     }
 
     @OnClose

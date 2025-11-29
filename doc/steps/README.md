@@ -24,7 +24,7 @@ This directory contains detailed step-by-step plans for implementing the Wspiern
 | [Step 06](step-06-tasks-16-19-intervention.md) | 16-19 | DONE | Intervention Module |
 | [Step 07](step-07-tasks-20-22-support.md) | 20-22 | DONE | Support Module |
 | [Step 08](step-08-tasks-23-25-facts-distiller.md) | 23-25 | DONE | Facts Distiller |
-| [Step 09](step-09-tasks-26-28-logging.md) | 26-28 | PARTIAL | Logging & Error Handling |
+| [Step 09](step-09-tasks-26-28-logging.md) | 26-28 | DONE | Logging & Error Handling |
 
 ---
 
@@ -57,8 +57,12 @@ This directory contains detailed step-by-step plans for implementing the Wspiern
 - [x] Task 24: Facts Extraction Logic
 - [x] Task 25: Facts Persistence & Notification
 
-### Pending Tasks
-- [ ] Task 26-28: Logging & Error Handling (partially done)
+### Completed Tasks (continued)
+- [x] Task 26: Custom SQLite Logger
+- [x] Task 27: Global Error Handler
+- [x] Task 28: Integration & Cleanup
+
+### All Tasks Complete!
 
 ---
 
