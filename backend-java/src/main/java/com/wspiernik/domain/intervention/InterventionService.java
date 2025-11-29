@@ -55,15 +55,23 @@ public class InterventionService {
      * Start a new intervention session.
      * Attempts to match the situation description to a crisis scenario.
      */
+    private static final String GENERIC_HELP_MARKER = "ogólna pomoc";
+    private static final String GREETING_MESSAGE = "Jak mogę Ci dziś pomóc? Opisz sytuację, a postaram się Ci doradzić.";
+
     public InterventionStartResult startIntervention(ConversationSession session, String situationDescription) {
         LOG.infof("Starting intervention for situation: %s", situationDescription);
 
-        // Try to match scenario
-        MatchResult matchResult = scenarioMatchingService.matchScenario(situationDescription);
+        // Check if this is a generic start without specific situation
+        boolean isGenericStart = GENERIC_HELP_MARKER.equals(situationDescription);
+
+        // Try to match scenario (skip for generic start)
+        MatchResult matchResult = isGenericStart
+                ? new MatchResult(false, null, null, 0.0)
+                : scenarioMatchingService.matchScenario(situationDescription);
 
         // Create intervention state
         InterventionState state = new InterventionState();
-        state.setSituationDescription(situationDescription);
+        state.setSituationDescription(isGenericStart ? null : situationDescription);
 
         // Create conversation record
         Long conversationId = QuarkusTransaction.requiringNew().call(() -> {
@@ -81,7 +89,13 @@ public class InterventionService {
 
         String firstMessage;
 
-        if (matchResult.matched()) {
+        if (isGenericStart) {
+            // Generic start - just greeting, no LLM call
+            state.initializeAsGeneric(null);
+            LOG.info("Generic start - sending greeting");
+            firstMessage = GREETING_MESSAGE;
+
+        } else if (matchResult.matched()) {
             // Initialize with matched scenario
             CrisisScenario scenario = matchResult.scenario();
             List<String> questions = scenarioMatchingService.parseQuestions(scenario.questionsSequence);
@@ -93,7 +107,7 @@ public class InterventionService {
             firstMessage = generateScenarioResponse(state, session, situationDescription);
 
         } else {
-            // Generic intervention
+            // Generic intervention with situation description
             state.initializeAsGeneric(situationDescription);
 
             LOG.info("No scenario matched, using generic intervention");
@@ -133,11 +147,16 @@ public class InterventionService {
         // Store response for current question
         state.addResponse(userMessage);
 
+        // If situation description is empty, use the first user message as the description
+        if (state.getSituationDescription() == null || state.getSituationDescription().isBlank()) {
+            state.setSituationDescription(userMessage);
+        }
+
         String response;
 
         if (state.isGenericIntervention()) {
             // For generic intervention, always use LLM
-            response = generateGenericResponse(state, session, userMessage);
+            response = generateGenericResponse(state, session, state.getSituationDescription());
         } else {
             // For scenario-based intervention
             state.moveToNextQuestion();

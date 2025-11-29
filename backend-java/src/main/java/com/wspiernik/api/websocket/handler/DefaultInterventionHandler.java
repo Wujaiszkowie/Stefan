@@ -47,17 +47,17 @@ public class DefaultInterventionHandler implements InterventionHandler {
             return;
         }
 
-        // Get scenario description from payload
+        // Get scenario description from payload (optional)
         String situationDescription = message.getScenarioDescription();
         if (situationDescription == null || situationDescription.isBlank()) {
             // Fall back to text field
             situationDescription = message.getText();
         }
 
-        if (situationDescription == null || situationDescription.isBlank()) {
-            messageSender.sendError(connection, "Opis sytuacji jest wymagany",
-                    ErrorPayload.CODE_VALIDATION_ERROR, message.requestId());
-            return;
+        // If no description provided, use generic greeting
+        boolean isGenericStart = (situationDescription == null || situationDescription.isBlank());
+        if (isGenericStart) {
+            situationDescription = "ogólna pomoc";  // placeholder for generic intervention
         }
 
         try {

@@ -46,7 +46,9 @@ export function WebSocketProvider({ children }) {
         payload: msg.payload || {},
         timestamp: Date.now()
       });
-      setConversationType(null);
+      // Only clear conversation if it matches the completed type
+      // This prevents clearing when switching between conversation types
+      setConversationType(current => current === type ? null : current);
     };
 
     const unsubscribes = [
