@@ -144,9 +144,9 @@ Create JPA entities matching the PRD database schema.
 | details | String | JSON |
 
 ### Acceptance Criteria
-- [ ] All entities created with proper JPA annotations
-- [ ] Tables auto-generated on application startup
-- [ ] Entities extend PanacheEntity for Panache support
+- [x] All entities created with proper JPA annotations
+- [x] Tables auto-generated on application startup
+- [x] Entities extend PanacheEntityBase for Panache support (using IDENTITY generation)
 
 ---
 

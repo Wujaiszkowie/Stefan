@@ -1,6 +1,6 @@
 # Step 08: Facts Distiller (Tasks 23-25)
 
-**Status:** PENDING
+**Status:** DONE
 **Tasks:** 23, 24, 25
 
 ---
@@ -49,9 +49,9 @@ public class FactsDistillerService {
 - Log processing start/end for debugging
 
 ### Acceptance Criteria
-- [ ] Event listener registered
-- [ ] Processing is truly asynchronous
-- [ ] Errors don't crash the application
+- [x] Event listener registered
+- [x] Processing is truly asynchronous
+- [x] Errors don't crash the application
 
 ---
 
@@ -127,10 +127,10 @@ record ExtractedFact(
 - Log skipped duplicates for debugging
 
 ### Acceptance Criteria
-- [ ] LLM prompt generates valid JSON
-- [ ] Facts parsed correctly
-- [ ] Duplicates filtered out
-- [ ] Empty array handled (no new facts)
+- [x] LLM prompt generates valid JSON
+- [x] Facts parsed correctly
+- [x] Duplicates filtered out
+- [x] Empty array handled (no new facts)
 
 ---
 
@@ -217,10 +217,10 @@ void notifyClient(String connectionId, Long conversationId, List<Fact> facts) {
 - LLM timeout: mark conversation as `facts_extracted: false`, retry later
 
 ### Acceptance Criteria
-- [ ] Facts saved to database
-- [ ] Conversation marked as processed
-- [ ] WebSocket notification sent
-- [ ] Handles edge cases gracefully
+- [x] Facts saved to database
+- [x] Conversation marked as processed
+- [x] WebSocket notification sent
+- [x] Handles edge cases gracefully
 
 ---
 

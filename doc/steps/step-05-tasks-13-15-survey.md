@@ -1,6 +1,6 @@
 # Step 05: Survey Module (Tasks 13-15)
 
-**Status:** PENDING
+**Status:** DONE
 **Tasks:** 13, 14, 15
 
 ---
@@ -48,9 +48,9 @@ record SurveyState(
 ```
 
 ### Acceptance Criteria
-- [ ] State machine transitions correctly
-- [ ] All required data points collected
-- [ ] State preserved across messages
+- [x] State machine transitions correctly
+- [x] All required data points collected
+- [x] State preserved across messages
 
 ---
 
@@ -88,9 +88,9 @@ ProcessedAnswer processResponse(SurveyStep step, String userResponse) {
 ```
 
 ### Acceptance Criteria
-- [ ] Questions are conversational, not form-like
-- [ ] Follow-up questions work when answers are unclear
-- [ ] Data extracted correctly from natural language
+- [x] Questions are conversational, not form-like
+- [x] Follow-up questions work when answers are unclear
+- [x] Data extracted correctly from natural language
 
 ---
 
@@ -138,10 +138,10 @@ CaregiverProfile createProfile(SurveyState state) {
 ```
 
 ### Acceptance Criteria
-- [ ] Profile saved to database
-- [ ] Conversation transcript saved
-- [ ] Facts Distiller triggered
-- [ ] Completion message sent to client
+- [x] Profile saved to database
+- [x] Conversation transcript saved
+- [ ] Facts Distiller triggered (not yet implemented)
+- [x] Completion message sent to client
 
 ---
 

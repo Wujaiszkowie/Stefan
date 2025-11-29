@@ -31,6 +31,7 @@ public class ConversationSessionManager {
      */
     public static class ConversationSession {
         public String sessionId;
+        public String connectionId;  // WebSocket connection ID for async notifications
         public String caregiverId;
         public String conversationType; // "survey", "intervention", "support"
         public Long conversationId;
@@ -40,6 +41,7 @@ public class ConversationSessionManager {
 
         public ConversationSession(String sessionId, String conversationType) {
             this.sessionId = sessionId;
+            this.connectionId = sessionId;  // Connection ID is the same as session ID
             this.conversationType = conversationType;
             this.currentStep = 0;
             this.messageHistory = new ArrayList<>();

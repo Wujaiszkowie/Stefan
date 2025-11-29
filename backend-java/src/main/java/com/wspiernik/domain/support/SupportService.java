@@ -1,6 +1,7 @@
 package com.wspiernik.domain.support;
 
 import com.wspiernik.api.websocket.ConversationSessionManager.ConversationSession;
+import com.wspiernik.domain.events.ConversationCompletedEvent;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.PromptTemplates;
 import com.wspiernik.infrastructure.llm.dto.LlmMessage;
@@ -14,6 +15,7 @@ import com.wspiernik.infrastructure.persistence.repository.ConversationRepositor
 import com.wspiernik.infrastructure.persistence.repository.FactRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
@@ -50,6 +52,9 @@ public class SupportService {
 
     @Inject
     CaregiverSupportLogRepository supportLogRepository;
+
+    @Inject
+    Event<ConversationCompletedEvent> conversationCompletedEvent;
 
     /**
      * Start a new support session.
@@ -148,16 +153,26 @@ public class SupportService {
         saveSupportLog(state, session);
 
         // Update conversation end time
+        String transcript = buildTranscript(session);
         QuarkusTransaction.requiringNew().run(() -> {
             if (state.getConversationId() != null) {
                 Conversation conversation = conversationRepository.findById(state.getConversationId());
                 if (conversation != null) {
                     conversation.endedAt = LocalDateTime.now();
-                    conversation.rawTranscript = buildTranscript(session);
+                    conversation.rawTranscript = transcript;
                     conversationRepository.persist(conversation);
                 }
             }
         });
+
+        // Fire event for facts extraction
+        conversationCompletedEvent.fireAsync(new ConversationCompletedEvent(
+                state.getConversationId(),
+                session.caregiverId,
+                "support",
+                transcript,
+                session.connectionId
+        ));
 
         return new SupportCompleteResult(state.getConversationId(), farewell);
     }

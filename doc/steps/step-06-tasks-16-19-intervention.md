@@ -1,6 +1,6 @@
 # Step 06: Intervention Module (Tasks 16-19)
 
-**Status:** PENDING
+**Status:** DONE
 **Tasks:** 16, 17, 18, 19
 
 ---
@@ -44,9 +44,9 @@ Optional<CrisisScenario> matchScenario(String description) {
 | Chest Pain | ból w klatce, ból serca, duszność, dusi się |
 
 ### Acceptance Criteria
-- [ ] Keywords loaded from database
-- [ ] Matching is case-insensitive
-- [ ] Unmatched input handled gracefully
+- [x] Keywords loaded from database
+- [x] Matching is case-insensitive
+- [x] Unmatched input handled gracefully
 
 ---
 
@@ -87,9 +87,9 @@ String completeIntervention(String sessionId);
 3. **Complete:** Save transcript, trigger facts extraction, return summary
 
 ### Acceptance Criteria
-- [ ] Scenario matched or generic flow used
-- [ ] Profile context injected into prompts
-- [ ] Conversation state maintained
+- [x] Scenario matched or generic flow used
+- [x] Profile context injected into prompts
+- [x] Conversation state maintained
 
 ---
 
@@ -135,9 +135,9 @@ String generateNextQuestion(InterventionState state) {
 - Continue questioning otherwise
 
 ### Acceptance Criteria
-- [ ] Questions follow scenario sequence
-- [ ] Profile context used appropriately
-- [ ] Completion detected correctly
+- [x] Questions follow scenario sequence
+- [x] Profile context used appropriately
+- [x] Completion detected correctly
 
 ---
 
@@ -194,10 +194,10 @@ String generateSummary(InterventionState state) {
 ```
 
 ### Acceptance Criteria
-- [ ] Transcript saved to database
-- [ ] Summary generated
-- [ ] Facts Distiller triggered asynchronously
-- [ ] Client notified of completion
+- [x] Transcript saved to database
+- [x] Summary generated
+- [ ] Facts Distiller triggered asynchronously (not yet implemented)
+- [x] Client notified of completion
 
 ---
 

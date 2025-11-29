@@ -1,6 +1,6 @@
 # Step 04: WebSocket Infrastructure (Tasks 9-12)
 
-**Status:** PENDING
+**Status:** DONE
 **Tasks:** 9, 10, 11, 12
 
 ---
@@ -56,9 +56,9 @@ Define all WebSocket message types as Java records.
 | `error` | `{message, code}` | Error response |
 
 ### Acceptance Criteria
-- [ ] All DTOs defined as Java records
-- [ ] Jackson annotations for JSON serialization
-- [ ] Payload types match PRD specification
+- [x] All DTOs defined as Java records
+- [x] Jackson annotations for JSON serialization
+- [x] Payload types match PRD specification
 
 ---
 
@@ -97,9 +97,9 @@ public class WspiernikSocket {
 - Handle malformed messages gracefully
 
 ### Acceptance Criteria
-- [ ] WebSocket endpoint accessible at `/ws`
-- [ ] JSON parsing works correctly
-- [ ] Connections tracked for broadcast capability
+- [x] WebSocket endpoint accessible at `/ws`
+- [x] JSON parsing works correctly
+- [x] Connections tracked for broadcast capability
 
 ---
 
@@ -131,9 +131,9 @@ switch (message.type()) {
 ```
 
 ### Acceptance Criteria
-- [ ] All message types routed correctly
-- [ ] Unknown types return error response
-- [ ] Handlers are injectable services
+- [x] All message types routed correctly
+- [x] Unknown types return error response
+- [x] Handlers are injectable services
 
 ---
 
@@ -175,9 +175,9 @@ boolean hasActiveSession(WebSocketConnection conn);
 - Support for storing arbitrary context (profile, scenario, etc.)
 
 ### Acceptance Criteria
-- [ ] Sessions created/retrieved correctly
-- [ ] Thread-safe implementation
-- [ ] Sessions cleaned up on disconnect
+- [x] Sessions created/retrieved correctly
+- [x] Thread-safe implementation
+- [x] Sessions cleaned up on disconnect
 
 ---
 

@@ -1,6 +1,7 @@
 package com.wspiernik.domain.intervention;
 
 import com.wspiernik.api.websocket.ConversationSessionManager.ConversationSession;
+import com.wspiernik.domain.events.ConversationCompletedEvent;
 import com.wspiernik.domain.intervention.ScenarioMatchingService.MatchResult;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.PromptTemplates;
@@ -14,6 +15,7 @@ import com.wspiernik.infrastructure.persistence.repository.ConversationRepositor
 import com.wspiernik.infrastructure.persistence.repository.FactRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
@@ -50,6 +52,9 @@ public class InterventionService {
 
     @Inject
     FactRepository factRepository;
+
+    @Inject
+    Event<ConversationCompletedEvent> conversationCompletedEvent;
 
     /**
      * Start a new intervention session.
@@ -266,6 +271,15 @@ public class InterventionService {
                     }
                 }
             });
+
+            // Fire event for facts extraction
+            conversationCompletedEvent.fireAsync(new ConversationCompletedEvent(
+                    state.getConversationId(),
+                    session.caregiverId,
+                    "intervention",
+                    summary,
+                    session.connectionId
+            ));
 
             return response;
         } catch (Exception e) {

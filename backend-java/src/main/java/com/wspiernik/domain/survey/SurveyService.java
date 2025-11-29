@@ -1,6 +1,7 @@
 package com.wspiernik.domain.survey;
 
 import com.wspiernik.api.websocket.ConversationSessionManager.ConversationSession;
+import com.wspiernik.domain.events.ConversationCompletedEvent;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.dto.LlmMessage;
 import com.wspiernik.infrastructure.persistence.entity.CaregiverProfile;
@@ -9,6 +10,7 @@ import com.wspiernik.infrastructure.persistence.repository.CaregiverProfileRepos
 import com.wspiernik.infrastructure.persistence.repository.ConversationRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
@@ -34,6 +36,9 @@ public class SurveyService {
 
     @Inject
     CaregiverProfileRepository profileRepository;
+
+    @Inject
+    Event<ConversationCompletedEvent> conversationCompletedEvent;
 
     /**
      * Start a new survey session.
@@ -125,6 +130,16 @@ public class SurveyService {
 
             // Save profile
             saveCaregiverProfile(state);
+
+            // Fire event for facts extraction
+            String transcript = buildTranscript(session);
+            conversationCompletedEvent.fireAsync(new ConversationCompletedEvent(
+                    state.getConversationId(),
+                    null,  // caregiverId not set for survey
+                    "survey",
+                    transcript,
+                    session.connectionId
+            ));
 
             String completionMessage = "Dziękuję! Twój profil został zapisany. " +
                     "Teraz będę mógł lepiej Ci pomagać w opiece nad podopiecznym.";
@@ -298,6 +313,18 @@ public class SurveyService {
 
             LOG.info("Saved caregiver profile from survey");
         });
+    }
+
+    /**
+     * Build transcript from message history.
+     */
+    private String buildTranscript(ConversationSession session) {
+        StringBuilder sb = new StringBuilder();
+        for (LlmMessage msg : session.messageHistory) {
+            String role = "user".equals(msg.role()) ? "Opiekun" : "Stefan";
+            sb.append(role).append(": ").append(msg.content()).append("\n\n");
+        }
+        return sb.toString();
     }
 
     /**
