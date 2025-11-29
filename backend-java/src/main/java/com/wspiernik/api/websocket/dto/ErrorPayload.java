@@ -16,4 +16,6 @@ public record ErrorPayload(
     public static final String CODE_LLM_ERROR = "LLM_ERROR";
     public static final String CODE_DATABASE_ERROR = "DATABASE_ERROR";
     public static final String CODE_INTERNAL_ERROR = "INTERNAL_ERROR";
+    public static final String CODE_INVALID_STATE = "INVALID_STATE";
+    public static final String CODE_VALIDATION_ERROR = "VALIDATION_ERROR";
 }

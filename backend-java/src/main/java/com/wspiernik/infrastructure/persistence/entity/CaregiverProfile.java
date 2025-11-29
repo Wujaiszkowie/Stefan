@@ -37,6 +37,9 @@ public class CaregiverProfile extends PanacheEntityBase {
     @Column(name = "ward_mobility_limits", columnDefinition = "TEXT")
     public String wardMobilityLimits; // JSON
 
+    @Column(name = "ward_other_info", columnDefinition = "TEXT")
+    public String wardOtherInfo;
+
     @Column(name = "created_at")
     public LocalDateTime createdAt;
 

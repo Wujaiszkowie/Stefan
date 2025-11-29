@@ -56,4 +56,11 @@ public record IncomingMessage(
         }
         return payload.get("limit").asInt(10);
     }
+
+    /**
+     * Get content/text from payload (alias for getText).
+     */
+    public String getContent() {
+        return getText();
+    }
 }
