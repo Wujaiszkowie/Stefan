@@ -1,6 +1,6 @@
 # Step 02: Repository Layer & Data Initialization (Tasks 4-5)
 
-**Status:** PENDING
+**Status:** COMPLETED
 **Tasks:** 4, 5
 
 ---
@@ -60,9 +60,9 @@ List<BackendLog> findByLevel(String level, int limit)
 ```
 
 ### Acceptance Criteria
-- [ ] All repositories created as `@ApplicationScoped` beans
-- [ ] Custom query methods implemented
-- [ ] Repositories injectable via CDI
+- [x] All repositories created as `@ApplicationScoped` beans
+- [x] Custom query methods implemented
+- [x] Repositories injectable via CDI
 
 ---
 
@@ -134,10 +134,10 @@ Seed the database with 3 MVP crisis scenarios on application startup.
 - Log initialization status
 
 ### Acceptance Criteria
-- [ ] DataInitializer runs on startup
-- [ ] 3 scenarios inserted if table is empty
-- [ ] Duplicate scenarios not inserted on restart
-- [ ] Startup logs show initialization status
+- [x] DataInitializer runs on startup
+- [x] 3 scenarios inserted if table is empty
+- [x] Duplicate scenarios not inserted on restart
+- [x] Startup logs show initialization status
 
 ---
 
