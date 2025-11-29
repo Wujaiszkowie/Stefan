@@ -15,6 +15,9 @@ import java.util.List;
  * Entity representing backend application logs.
  * Stores INFO, WARNING, and ERROR level logs with details for debugging.
  */
+@Deprecated(
+        forRemoval = true
+)
 @Entity
 @Table(name = "backend_logs")
 public class BackendLog extends PanacheEntityBase {
