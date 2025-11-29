@@ -1,6 +1,6 @@
 # Step 03: LLM Integration (Tasks 6-8)
 
-**Status:** PENDING
+**Status:** COMPLETED
 **Tasks:** 6, 7, 8
 
 ---
@@ -55,9 +55,9 @@ record LlmChoice(
 ```
 
 ### Acceptance Criteria
-- [ ] Interface defined with clear contract
-- [ ] DTOs match OpenAI API format
-- [ ] Records used for immutability
+- [x] Interface defined with clear contract
+- [x] DTOs match OpenAI API format
+- [x] Records used for immutability
 
 ---
 
@@ -91,10 +91,10 @@ public interface BielnikApi {
 - Implement retry logic for transient failures (optional)
 
 ### Acceptance Criteria
-- [ ] REST Client configured in application.properties
-- [ ] LlmClient implementation is injectable
-- [ ] Timeout handling works correctly
-- [ ] Errors logged properly
+- [x] REST Client configured in application.properties
+- [x] LlmClient implementation is injectable
+- [x] Timeout handling works correctly
+- [x] Errors logged properly
 
 ---
 
@@ -142,9 +142,9 @@ Przeanalizuj poniższy zapis konwersacji i wyekstrahuj kluczowe fakty...
   - `buildFactsDistillerPrompt(String transcript, List<Fact> existingFacts)`
 
 ### Acceptance Criteria
-- [ ] All prompts defined as per PRD Section 9
-- [ ] Context injection methods work correctly
-- [ ] Prompts are configurable (can be overridden if needed)
+- [x] All prompts defined as per PRD Section 9
+- [x] Context injection methods work correctly
+- [x] Prompts are configurable (can be overridden if needed)
 
 ---
 

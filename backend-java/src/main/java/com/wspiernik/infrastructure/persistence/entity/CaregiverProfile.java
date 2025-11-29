@@ -1,8 +1,11 @@
 package com.wspiernik.infrastructure.persistence.entity;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
@@ -13,7 +16,11 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "caregiver_profile")
-public class CaregiverProfile extends PanacheEntity {
+public class CaregiverProfile extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
 
     @Column(name = "caregiver_id", unique = true)
     public String caregiverId;

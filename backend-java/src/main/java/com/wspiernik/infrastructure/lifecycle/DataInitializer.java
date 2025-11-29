@@ -11,6 +11,8 @@ import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Initializes database with seed data on application startup.
@@ -32,27 +34,28 @@ public class DataInitializer {
     void onStart(@Observes StartupEvent ev) {
         LOG.info("DataInitializer: Starting database initialization...");
 
-        int scenariosCreated = 0;
+        // Collect all scenarios to create
+        List<CrisisScenario> scenariosToCreate = new ArrayList<>();
 
         if (!scenarioRepository.existsByScenarioKey("fall")) {
-            createFallScenario();
-            scenariosCreated++;
+            scenariosToCreate.add(createFallScenario());
         }
 
         if (!scenarioRepository.existsByScenarioKey("confusion")) {
-            createConfusionScenario();
-            scenariosCreated++;
+            scenariosToCreate.add(createConfusionScenario());
         }
 
         if (!scenarioRepository.existsByScenarioKey("chest_pain")) {
-            createChestPainScenario();
-            scenariosCreated++;
+            scenariosToCreate.add(createChestPainScenario());
         }
 
-        if (scenariosCreated > 0) {
-            LOG.infof("DataInitializer: Created %d crisis scenarios", scenariosCreated);
-            logRepository.logInfo(MODULE, "Database initialized",
-                    "{\"scenariosCreated\": " + scenariosCreated + "}");
+        // Persist all at once to avoid SQLite locking issues
+        if (!scenariosToCreate.isEmpty()) {
+            for (CrisisScenario scenario : scenariosToCreate) {
+                scenarioRepository.persist(scenario);
+                LOG.infof("Created scenario: %s (%s)", scenario.name, scenario.scenarioKey);
+            }
+            LOG.infof("DataInitializer: Created %d crisis scenarios", scenariosToCreate.size());
         } else {
             LOG.info("DataInitializer: All scenarios already exist, skipping initialization");
         }
@@ -60,7 +63,7 @@ public class DataInitializer {
         LOG.infof("DataInitializer: Total scenarios in database: %d", scenarioRepository.count());
     }
 
-    private void createFallScenario() {
+    private CrisisScenario createFallScenario() {
         CrisisScenario scenario = new CrisisScenario();
         scenario.scenarioKey = "fall";
         scenario.name = "Upadek";
@@ -94,11 +97,10 @@ public class DataInitializer {
                 - Po zakończeniu zbierania informacji, powiedz "INTERVENTION_COMPLETE" i przedstaw podsumowanie
                 """.trim();
         scenario.createdAt = LocalDateTime.now();
-        scenarioRepository.persist(scenario);
-        LOG.info("Created scenario: Upadek (fall)");
+        return scenario;
     }
 
-    private void createConfusionScenario() {
+    private CrisisScenario createConfusionScenario() {
         CrisisScenario scenario = new CrisisScenario();
         scenario.scenarioKey = "confusion";
         scenario.name = "Zamieszanie Umysłowe";
@@ -132,11 +134,10 @@ public class DataInitializer {
                 - Po zakończeniu zbierania informacji, powiedz "INTERVENTION_COMPLETE" i przedstaw podsumowanie
                 """.trim();
         scenario.createdAt = LocalDateTime.now();
-        scenarioRepository.persist(scenario);
-        LOG.info("Created scenario: Zamieszanie Umysłowe (confusion)");
+        return scenario;
     }
 
-    private void createChestPainScenario() {
+    private CrisisScenario createChestPainScenario() {
         CrisisScenario scenario = new CrisisScenario();
         scenario.scenarioKey = "chest_pain";
         scenario.name = "Ból w Klatce Piersiowej";
@@ -169,7 +170,6 @@ public class DataInitializer {
                 - Po zakończeniu zbierania informacji, powiedz "INTERVENTION_COMPLETE" i przedstaw podsumowanie z zaleceniami
                 """.trim();
         scenario.createdAt = LocalDateTime.now();
-        scenarioRepository.persist(scenario);
-        LOG.info("Created scenario: Ból w Klatce Piersiowej (chest_pain)");
+        return scenario;
     }
 }
