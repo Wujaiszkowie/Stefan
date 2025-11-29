@@ -11,7 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Entity representing an extracted fact from a conversation.
@@ -30,7 +29,7 @@ public class Fact extends PanacheEntityBase {
 
     @Column(name = "fact_type")
     @Convert(converter = JsonToListConverter.class)
-    public List<String> tags;
+    public String factType; // "symptom", "medication", "event", "condition", "limitation"
 
     @Column(name = "fact_value", columnDefinition = "TEXT")
     public String factValue;

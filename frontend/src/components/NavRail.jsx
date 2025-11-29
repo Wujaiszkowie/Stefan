@@ -14,11 +14,11 @@ const NavRailItem = ({ icon, label, isActive, onClick }) => {
       onClick={onClick}
       aria-current={isActive ? 'page' : undefined}
       aria-label={label}
+      title={label}
     >
       <div className="nav-rail-icon">
         {icon}
       </div>
-      <span className="nav-rail-label">{label}</span>
     </button>
   );
 };

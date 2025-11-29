@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wspiernik.domain.facts.Fact;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * DTO for fact data in WebSocket messages.
@@ -13,7 +12,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record FactDto(
         @JsonProperty("id") Long id,
-        @JsonProperty("tags") List<String> tags,
+        @JsonProperty("type") String type,
         @JsonProperty("value") String value,
         @JsonProperty("severity") Integer severity,
         @JsonProperty("extracted_at") LocalDateTime extractedAt
@@ -24,7 +23,7 @@ public record FactDto(
     public static FactDto from(Fact fact) {
         return new FactDto(
                 fact.id,
-                fact.tags,
+                fact.factType,
                 fact.factValue,
                 fact.severity,
                 fact.extractedAt

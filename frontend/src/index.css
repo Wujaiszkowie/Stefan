@@ -1,18 +1,68 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-    /* Legacy variables (for backwards compatibility) */
-    --bg-color: #F3F4F6;
-    --card-bg: #FFFFFF;
-    --text-primary: #111827;
-    --text-secondary: #6B7280;
-    --accent-blue: #3B82F6;
-    --accent-blue-hover: #2563EB;
-    --accent-orange: #F59E0B;
-    --accent-red: #EF4444;
-    --accent-red-hover: #DC2626;
-    --accent-mental: #64748B;
-    --accent-mental-hover: #475569;
+    /* ===========================================
+       M3 Color System - Faded/Muted Palette
+       =========================================== */
+
+    /* Primary - Soft Muted Purple */
+    --md-sys-color-primary: #7c6b9e;
+    --md-sys-color-on-primary: #ffffff;
+    --md-sys-color-primary-container: #e8e0f0;
+    --md-sys-color-on-primary-container: #2d2347;
+
+    /* Secondary - Soft Gray-Purple */
+    --md-sys-color-secondary: #8a8a9a;
+    --md-sys-color-on-secondary: #ffffff;
+    --md-sys-color-secondary-container: #e8e8f0;
+    --md-sys-color-on-secondary-container: #2a2a35;
+
+    /* Tertiary - Muted Dusty Rose */
+    --md-sys-color-tertiary: #9e7d8a;
+    --md-sys-color-on-tertiary: #ffffff;
+    --md-sys-color-tertiary-container: #f5e8ed;
+    --md-sys-color-on-tertiary-container: #3a2830;
+
+    /* Error - Muted Coral */
+    --md-sys-color-error: #c97b6b;
+    --md-sys-color-on-error: #ffffff;
+    --md-sys-color-error-container: #fae8e5;
+    --md-sys-color-on-error-container: #3d1f18;
+
+    /* Background & Surface */
+    --md-sys-color-background: #faf9fc;
+    --md-sys-color-on-background: #2c2c2e;
+    --md-sys-color-surface: #ffffff;
+    --md-sys-color-on-surface: #2c2c2e;
+    --md-sys-color-surface-variant: #f0edf2;
+    --md-sys-color-on-surface-variant: #5c5a62;
+    --md-sys-color-surface-container-low: #f8f6fa;
+    --md-sys-color-surface-container: #f4f2f6;
+    --md-sys-color-surface-container-high: #efecf0;
+
+    /* Outline */
+    --md-sys-color-outline: #9a989e;
+    --md-sys-color-outline-variant: #dddbe0;
+
+    /* Inverse (snackbars, tooltips) */
+    --md-sys-color-inverse-surface: #3a3a3c;
+    --md-sys-color-inverse-on-surface: #f5f3f7;
+    --md-sys-color-inverse-primary: #d4c8e8;
+
+    /* ===========================================
+       Legacy Variables (mapped to M3)
+       =========================================== */
+    --bg-color: #faf9fc;
+    --card-bg: #ffffff;
+    --text-primary: #2c2c2e;
+    --text-secondary: #5c5a62;
+    --accent-blue: #7c6b9e;
+    --accent-blue-hover: #6a5a8a;
+    --accent-orange: #d4a574;
+    --accent-red: #c97b6b;
+    --accent-red-hover: #b56a5a;
+    --accent-mental: #8a8a9a;
+    --accent-mental-hover: #7a7a8a;
     --border-radius: 20px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
@@ -22,39 +72,6 @@
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     --transition: all 0.2s ease-in-out;
-
-    /* M3 Design Tokens - Primary */
-    --md-sys-color-primary: #3B82F6;
-    --md-sys-color-on-primary: #FFFFFF;
-    --md-sys-color-primary-container: #D6E3FF;
-    --md-sys-color-on-primary-container: #001A41;
-
-    /* M3 Design Tokens - Secondary */
-    --md-sys-color-secondary: #4267B2;
-    --md-sys-color-on-secondary: #FFFFFF;
-    --md-sys-color-secondary-container: #D6E3FF;
-    --md-sys-color-on-secondary-container: #001A41;
-
-    /* M3 Design Tokens - Error (Emergency) */
-    --md-sys-color-error: #E53935;
-    --md-sys-color-on-error: #FFFFFF;
-    --md-sys-color-error-container: #FFEDEA;
-    --md-sys-color-on-error-container: #410002;
-
-    /* M3 Design Tokens - Surface */
-    --md-sys-color-surface: #FFFFFF;
-    --md-sys-color-surface-variant: #F3F4F6;
-    --md-sys-color-on-surface: #111827;
-    --md-sys-color-on-surface-variant: #6B7280;
-
-    /* M3 Design Tokens - Outline */
-    --md-sys-color-outline: #79747E;
-    --md-sys-color-outline-variant: #E5E7EB;
-
-    /* M3 Design Tokens - Inverse */
-    --md-sys-color-inverse-surface: #313033;
-    --md-sys-color-inverse-on-surface: #F4EFF4;
-    --md-sys-color-inverse-primary: #A8C8FF;
 
     /* M3 Shape */
     --md-sys-shape-corner-none: 0px;
@@ -610,24 +627,24 @@ p {
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15), var(--md-sys-elevation-2);
 }
 
-/* Emergency Button */
+/* Emergency Button - Strong Red */
 .header-action-emergency {
-    background-color: var(--md-sys-color-error);
-    color: var(--md-sys-color-on-error);
+    background-color: #d64550;
+    color: #ffffff;
 }
 
 .header-action-emergency:hover:not(:disabled) {
-    background-color: #D32F2F;
+    background-color: #c13a44;
 }
 
-/* Support Button */
+/* Support Button - Friendly Teal/Blue */
 .header-action-support {
-    background-color: var(--md-sys-color-secondary);
-    color: var(--md-sys-color-on-secondary);
+    background-color: #5b9aa0;
+    color: #ffffff;
 }
 
 .header-action-support:hover:not(:disabled) {
-    background-color: #365899;
+    background-color: #4a8589;
 }
 
 /* Bell Button */

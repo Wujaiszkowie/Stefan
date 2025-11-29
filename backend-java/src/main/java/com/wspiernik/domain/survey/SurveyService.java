@@ -180,27 +180,27 @@ public class SurveyService {
 
             switch (state.getCurrentStep()) {
                 case WARD_AGE -> {
-                    newFact.tags = List.of("age", "ward");
+                    newFact.factType = "age";
                     newFact.factValue = "Wiek " + state.getWardAge();
                     factRepository.persist(newFact);
                 }
                 case WARD_CONDITIONS -> {
-                    newFact.tags = List.of("conditions", "ward");
+                    newFact.factType = "conditions";
                     newFact.factValue = "Dolegliwości " + state.getWardConditions();
                     factRepository.persist(newFact);
                 }
                 case WARD_MEDICATIONS -> {
-                    newFact.tags = List.of("medications", "ward");
+                    newFact.factType = "medications";
                     newFact.factValue = "Leki " + state.getWardConditions();
                     factRepository.persist(newFact);
                 }
                 case WARD_MOBILITY -> {
-                    newFact.tags = List.of("mobility", "ward");
+                    newFact.factType = "mobility";
                     newFact.factValue = "Mobilność " + state.getWardConditions();
                     factRepository.persist(newFact);
                 }
                 case WARD_OTHER -> {
-                    newFact.tags = List.of("other", "ward");
+                    newFact.factType = "other";
                     newFact.factValue = "Dodatkowe " + state.getWardConditions();
                     factRepository.persist(newFact);
                 }

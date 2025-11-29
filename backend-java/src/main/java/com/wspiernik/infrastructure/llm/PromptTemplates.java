@@ -210,7 +210,7 @@ public class PromptTemplates {
                 sb.append("... i ").append(facts.size() - 10).append(" więcej\n");
                 break;
             }
-            sb.append("- [").append(fact.tags).append("] ").append(fact.factValue);
+            sb.append("- [").append(fact.factType).append("] ").append(fact.factValue);
             if (fact.severity != null) {
                 sb.append(" (poziom: ").append(fact.severity).append("/10)");
             }
@@ -230,7 +230,7 @@ public class PromptTemplates {
             return objectMapper.writeValueAsString(
                     facts.stream()
                             .map(f -> Map.of(
-                                    "type", f.tags != null ? f.tags : "",
+                                    "type", f.factType != null ? f.factType : "",
                                     "value", f.factValue != null ? f.factValue : "",
                                     "severity", f.severity != null ? f.severity : 0
                             ))
@@ -248,7 +248,7 @@ public class PromptTemplates {
 
         StringBuilder sb = new StringBuilder();
         for (Fact fact : facts) {
-            sb.append("- [").append(fact.tags).append("] ").append(fact.factValue).append("\n");
+            sb.append("- [").append(fact.factType).append("] ").append(fact.factValue).append("\n");
         }
         return sb.toString();
     }
