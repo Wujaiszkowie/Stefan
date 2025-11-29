@@ -27,7 +27,7 @@ const CalendarComponent = () => {
         setActiveStartDate(activeStartDate);
     };
 
-    const formattedMonthYear = activeStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const formattedMonthYear = activeStartDate.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
 
     return (
         <div style={{ marginBottom: '32px' }}>
