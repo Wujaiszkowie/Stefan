@@ -39,12 +39,13 @@ const Chat = () => {
 
   // Subscribe to all relevant message types
   useEffect(() => {
-    const addAssistantMessage = (content, options = {}) => {
+    const addAssistantMessage = (content, sessionType, options = {}) => {
       setLoading(false);
       setMessages(prev => [...prev, {
         id: Date.now(),
         role: 'assistant',
         content,
+        sessionType,
         ...options
       }]);
     };
@@ -56,24 +57,25 @@ const Chat = () => {
         // Backend sends 'text' field, fallback to 'message' for compatibility
         const content = msg.payload.text || msg.payload.message;
         if (content) {
-          addAssistantMessage(content);
+          addAssistantMessage(content, 'support');
         }
       }),
 
       // Survey questions
       subscribe('survey_question', (msg) => {
-        addAssistantMessage(msg.payload.question);
+        addAssistantMessage(msg.payload.question, 'survey');
       }),
 
       // Intervention messages
       subscribe('intervention_question', (msg) => {
-        addAssistantMessage(msg.payload.question);
+        addAssistantMessage(msg.payload.question, 'intervention');
       }),
 
       subscribe('intervention_scenario_matched', (msg) => {
         const { scenario, severity } = msg.payload;
         addAssistantMessage(
-          `Rozpoznano sytuację: ${scenario} (poziom: ${severity})`
+          `Rozpoznano sytuację: ${scenario} (poziom: ${severity})`,
+          'intervention'
         );
       }),
 
@@ -81,13 +83,14 @@ const Chat = () => {
       subscribe('survey_completed', (msg) => {
         setLoading(false);
         addAssistantMessage(
-          `Profil został zapisany. Zapisano ${msg.payload.factsSavedCount || 0} informacji.`
+          `Profil został zapisany. Zapisano ${msg.payload.factsSavedCount || 0} informacji.`,
+          'survey'
         );
       }),
 
       subscribe('intervention_completed', (msg) => {
         setLoading(false);
-        addAssistantMessage('Interwencja zakończona. Czy potrzebujesz dalszej pomocy?');
+        addAssistantMessage('Interwencja zakończona. Czy potrzebujesz dalszej pomocy?', 'intervention');
       }),
 
       subscribe('support_completed', (msg) => {
@@ -95,13 +98,18 @@ const Chat = () => {
         const duration = msg.payload.duration
           ? ` Czas trwania: ${Math.round(msg.payload.duration / 60)} min.`
           : '';
-        addAssistantMessage(`Sesja wsparcia zakończona.${duration}`);
+        addAssistantMessage(`Sesja wsparcia zakończona.${duration}`, 'support');
       }),
 
-      // Error handling
+      // Error handling - detect session type from error message
       subscribe('error', (msg) => {
         setLoading(false);
-        addAssistantMessage(`Błąd: ${msg.payload.message}`, { isError: true });
+        const errorMsg = msg.payload.message || '';
+        let errorSessionType = null;
+        if (errorMsg.includes('interwencj')) errorSessionType = 'intervention';
+        else if (errorMsg.includes('wsparci') || errorMsg.includes('support')) errorSessionType = 'support';
+        else if (errorMsg.includes('ankiet') || errorMsg.includes('survey')) errorSessionType = 'survey';
+        addAssistantMessage(`Błąd: ${errorMsg}`, errorSessionType, { isError: true });
       })
     ];
 
@@ -115,6 +123,16 @@ const Chat = () => {
       setLoading(true);
     }
   }, [conversationType]);
+
+  // Filter messages to show only those matching current session type
+  const filteredMessages = messages.filter(msg => {
+    // Always show user messages
+    if (msg.role === 'user') return true;
+    // Show messages without sessionType (generic messages)
+    if (!msg.sessionType) return true;
+    // Only show assistant messages matching current conversation
+    return msg.sessionType === conversationType;
+  });
 
   // Send message handler
   const sendMessage = () => {
@@ -181,7 +199,7 @@ const Chat = () => {
       )}
 
       <div className="chat-messages">
-        {messages.length === 0 && !conversationType && (
+        {filteredMessages.length === 0 && !conversationType && (
           <div className="chat-empty-state">
             <div>
               <p>Rozpocznij rozmowę wybierając jedną z opcji:</p>
@@ -194,13 +212,13 @@ const Chat = () => {
           </div>
         )}
 
-        {messages.length === 0 && conversationType && loading && (
+        {filteredMessages.length === 0 && conversationType && loading && (
           <div className="chat-empty-state">
             <p>Łączenie z asystentem...</p>
           </div>
         )}
 
-        {messages.map((message) => (
+        {filteredMessages.map((message) => (
           <div
             key={message.id}
             className={`chat-message ${message.role} ${message.isError ? 'error' : ''} ${message.isSystem ? 'system' : ''}`}
@@ -211,7 +229,7 @@ const Chat = () => {
           </div>
         ))}
 
-        {loading && messages.length > 0 && (
+        {loading && filteredMessages.length > 0 && (
           <div className="chat-message assistant">
             <div className="message-content loading">
               <span className="loading-dot"></span>

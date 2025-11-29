@@ -26,14 +26,6 @@ const BUTTON_CONFIG = [
     sublabel: 'Rozmowa i pomoc',
     className: 'btn-mental',
     ariaLabel: 'Rozpocznij sesję wsparcia'
-  },
-  {
-    id: 'survey',
-    type: 'survey',
-    label: 'Uzupełnij profil',
-    sublabel: 'Informacje o podopiecznym',
-    className: 'btn-survey',
-    ariaLabel: 'Uzupełnij profil podopiecznego'
   }
 ];
 

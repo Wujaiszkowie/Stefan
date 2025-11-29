@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { WebSocketProvider } from './context/WebSocketContext';
+import { WebSocketProvider, useWebSocketContext } from './context/WebSocketContext';
 import Header from './components/Header';
 import EventList from './components/EventList';
 import Calendar from './components/Calendar';
@@ -8,15 +8,16 @@ import TopNav from './components/TopNav';
 import Chat from './components/Chat';
 import ConnectionStatus from './components/ConnectionStatus';
 
-function App() {
+function AppContent() {
   const chatRef = useRef(null);
+  const { conversationType } = useWebSocketContext();
 
   const scrollToChat = () => {
     chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
-    <WebSocketProvider>
+    <>
       <TopNav onChatClick={scrollToChat} />
       <div className="container">
         {/* Connection Status */}
@@ -35,12 +36,22 @@ function App() {
           </div>
         </div>
 
-        {/* Chat Section */}
-        <div ref={chatRef} style={{ marginTop: '48px' }}>
-          <h2 style={{ fontSize: '24px', marginBottom: '24px' }}>Asystent AI</h2>
-          <Chat />
-        </div>
+        {/* Chat Section - only visible when a conversation is active */}
+        {conversationType && (
+          <div ref={chatRef} style={{ marginTop: '48px' }}>
+            <h2 style={{ fontSize: '24px', marginBottom: '24px' }}>Asystent AI</h2>
+            <Chat />
+          </div>
+        )}
       </div>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <WebSocketProvider>
+      <AppContent />
     </WebSocketProvider>
   );
 }

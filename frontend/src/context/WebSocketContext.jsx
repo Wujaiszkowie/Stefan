@@ -70,17 +70,19 @@ export function WebSocketProvider({ children }) {
       return false;
     }
 
-    // End any existing conversation
-    if (conversationType) {
-      sendMessage(`${conversationType}_complete`, {});
-    }
-
     // Clear last completion when starting new conversation
     setLastCompletion(null);
+
+    // End any existing conversation first
+    if (conversationType && conversationType !== type) {
+      console.log('[WebSocketContext] Ending existing conversation:', conversationType);
+      sendMessage(`${conversationType}_complete`, {});
+    }
 
     // Start new conversation
     setConversationType(type);
     sendMessage(`${type}_start`, payload);
+
     return true;
   }, [isConnected, conversationType, sendMessage]);
 
