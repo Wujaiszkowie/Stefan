@@ -34,6 +34,13 @@ public class FactRepository implements PanacheRepository<Fact> {
     }
 
     /**
+     * Find recent facts (alias for findAllOrderByCreatedAtDesc).
+     */
+    public List<Fact> findRecentFacts(int limit) {
+        return findAllOrderByCreatedAtDesc(limit);
+    }
+
+    /**
      * Find all facts (no limit).
      */
     public List<Fact> findAllFacts() {
