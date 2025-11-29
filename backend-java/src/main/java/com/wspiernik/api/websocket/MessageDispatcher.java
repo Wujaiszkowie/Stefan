@@ -68,7 +68,6 @@ public class MessageDispatcher {
 
             // Query messages
             case IncomingMessage.GET_FACTS -> queryHandler.getFacts(connection, message);
-            case IncomingMessage.GET_PROFILE -> queryHandler.getProfile(connection, message);
 
             // Unknown type
             default -> {

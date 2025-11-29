@@ -3,12 +3,12 @@ package com.wspiernik.infrastructure.llm;
 import com.wspiernik.infrastructure.llm.dto.LlmMessage;
 import com.wspiernik.infrastructure.llm.dto.LlmRequest;
 import com.wspiernik.infrastructure.llm.dto.LlmResponse;
-import com.wspiernik.infrastructure.persistence.repository.BackendLogRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.jboss.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,16 +20,13 @@ import java.util.List;
 @ApplicationScoped
 public class BielnikClient implements LlmClient {
 
-    private static final Logger LOG = Logger.getLogger(BielnikClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BielnikClient.class);
     private static final String MODULE = "LLM";
     private static final String ERROR_MESSAGE = "Przepraszam, wystąpił problem z generowaniem odpowiedzi. Proszę spróbować ponownie.";
 
     @Inject
     @RestClient
     BielnikApi bielnikApi;
-
-    @Inject
-    BackendLogRepository logRepository;
 
     @ConfigProperty(name = "wspiernik.llm.model", defaultValue = "bielik")
     String model;
@@ -65,7 +62,7 @@ public class BielnikClient implements LlmClient {
 
     @Override
     public String generateWithHistory(List<LlmMessage> messages) {
-        LOG.debugf("Sending request to LLM with %d messages", messages.size());
+        LOG.debug("Sending request to LLM with {} messages", messages.size());
 
         try {
             LlmRequest request = LlmRequest.builder()
@@ -79,7 +76,6 @@ public class BielnikClient implements LlmClient {
 
             if (response == null) {
                 LOG.error("LLM returned null response");
-                logRepository.logError(MODULE, "LLM returned null response", null);
                 return ERROR_MESSAGE;
             }
 
@@ -87,18 +83,14 @@ public class BielnikClient implements LlmClient {
 
             if (content == null || content.isBlank()) {
                 LOG.error("LLM returned empty content");
-                logRepository.logError(MODULE, "LLM returned empty content", null);
                 return ERROR_MESSAGE;
             }
 
-            LOG.debugf("LLM response received: %d characters", content.length());
+            LOG.debug("LLM response received: {} characters", content.length());
             return content;
 
         } catch (Exception e) {
-            LOG.errorf(e, "Error calling LLM API: %s", e.getMessage());
-            logRepository.logError(MODULE, "Error calling LLM API",
-                    String.format("{\"error\": \"%s\", \"type\": \"%s\"}",
-                            e.getMessage(), e.getClass().getSimpleName()));
+            LOG.error("Error calling LLM API: %s", e.getMessage(), e);
             return ERROR_MESSAGE;
         }
     }

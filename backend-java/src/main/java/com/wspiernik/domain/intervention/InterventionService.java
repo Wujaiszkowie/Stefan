@@ -2,17 +2,15 @@ package com.wspiernik.domain.intervention;
 
 import com.wspiernik.api.websocket.ConversationSessionManager.ConversationSession;
 import com.wspiernik.domain.events.ConversationCompletedEvent;
+import com.wspiernik.domain.facts.Fact;
+import com.wspiernik.domain.facts.FactRepository;
 import com.wspiernik.domain.intervention.ScenarioMatchingService.MatchResult;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.PromptTemplates;
 import com.wspiernik.infrastructure.llm.dto.LlmMessage;
-import com.wspiernik.infrastructure.persistence.entity.CaregiverProfile;
 import com.wspiernik.infrastructure.persistence.entity.Conversation;
 import com.wspiernik.infrastructure.persistence.entity.CrisisScenario;
-import com.wspiernik.infrastructure.persistence.entity.Fact;
-import com.wspiernik.infrastructure.persistence.repository.CaregiverProfileRepository;
 import com.wspiernik.infrastructure.persistence.repository.ConversationRepository;
-import com.wspiernik.infrastructure.persistence.repository.FactRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
@@ -46,9 +44,6 @@ public class InterventionService {
 
     @Inject
     ConversationRepository conversationRepository;
-
-    @Inject
-    CaregiverProfileRepository profileRepository;
 
     @Inject
     FactRepository factRepository;
@@ -179,11 +174,10 @@ public class InterventionService {
         CrisisScenario scenario = state.getScenario();
 
         // Get profile and facts
-        CaregiverProfile profile = getProfile();
-        List<Fact> facts = getRecentFacts();
+        List<Fact> facts = getFacts();
 
         // Build system prompt from scenario
-        String systemPrompt = promptTemplates.buildInterventionPrompt(profile, facts, scenario);
+        String systemPrompt = promptTemplates.buildInterventionPrompt(facts, scenario);
 
         List<LlmMessage> messages = new ArrayList<>();
         messages.add(new LlmMessage("system", systemPrompt));
@@ -211,13 +205,11 @@ public class InterventionService {
      * Generate response for generic intervention.
      */
     private String generateGenericResponse(InterventionState state, ConversationSession session, String contextMessage) {
-        // Get profile and facts
-        CaregiverProfile profile = getProfile();
-        List<Fact> facts = getRecentFacts();
+
+        List<Fact> facts = getFacts();
 
         // Build generic intervention prompt
-        String systemPrompt = promptTemplates.buildGenericInterventionPrompt(
-                profile, facts, state.getSituationDescription());
+        String systemPrompt = promptTemplates.buildGenericInterventionPrompt(facts, state.getSituationDescription());
 
         List<LlmMessage> messages = new ArrayList<>();
         messages.add(new LlmMessage("system", systemPrompt));
@@ -237,9 +229,7 @@ public class InterventionService {
     private String generateSummary(InterventionState state, ConversationSession session) {
         String summary = state.buildSummary();
 
-        // Get profile and facts for context
-        CaregiverProfile profile = getProfile();
-        List<Fact> facts = getRecentFacts();
+        List<Fact> facts = getFacts();
 
         String systemPrompt = """
                 Jesteś asystentem podsumowującym interwencję kryzysową.
@@ -275,7 +265,6 @@ public class InterventionService {
             // Fire event for facts extraction
             conversationCompletedEvent.fireAsync(new ConversationCompletedEvent(
                     state.getConversationId(),
-                    session.caregiverId,
                     "intervention",
                     summary,
                     session.connectionId
@@ -289,20 +278,11 @@ public class InterventionService {
     }
 
     /**
-     * Get caregiver profile.
-     */
-    private CaregiverProfile getProfile() {
-        return QuarkusTransaction.requiringNew().call(() ->
-                profileRepository.findAll().firstResult()
-        );
-    }
-
-    /**
      * Get recent facts.
      */
-    private List<Fact> getRecentFacts() {
+    private List<Fact> getFacts() {
         return QuarkusTransaction.requiringNew().call(() ->
-                factRepository.findRecentFacts(10)
+                factRepository.findAllFacts()
         );
     }
 

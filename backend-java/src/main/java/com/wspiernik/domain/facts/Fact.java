@@ -1,4 +1,4 @@
-package com.wspiernik.infrastructure.persistence.entity;
+package com.wspiernik.domain.facts;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
@@ -27,7 +27,7 @@ public class Fact extends PanacheEntityBase {
     public Long conversationId;
 
     @Column(name = "fact_type")
-    public String factType; // "symptom", "medication", "event", "condition", "limitation"
+    public List<String> tags;
 
     @Column(name = "fact_value", columnDefinition = "TEXT")
     public String factValue;
@@ -35,40 +35,9 @@ public class Fact extends PanacheEntityBase {
     @Column(name = "severity")
     public Integer severity; // 1-10 (nullable)
 
-    @Column(name = "context", columnDefinition = "TEXT")
-    public String context; // Additional context
-
     @Column(name = "extracted_at")
     public LocalDateTime extractedAt;
 
     @Column(name = "created_at")
     public LocalDateTime createdAt;
-
-    /**
-     * Find facts by conversation ID.
-     */
-    public static List<Fact> findByConversationId(Long conversationId) {
-        return list("conversationId", conversationId);
-    }
-
-    /**
-     * Find facts by type.
-     */
-    public static List<Fact> findByFactType(String factType) {
-        return list("factType", factType);
-    }
-
-    /**
-     * Find all facts ordered by creation date (newest first), with limit.
-     */
-    public static List<Fact> findAllOrderByCreatedAtDesc(int limit) {
-        return find("ORDER BY createdAt DESC").page(0, limit).list();
-    }
-
-    /**
-     * Count all facts.
-     */
-    public static long countAll() {
-        return count();
-    }
 }

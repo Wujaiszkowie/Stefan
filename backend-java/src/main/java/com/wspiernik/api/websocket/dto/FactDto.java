@@ -2,9 +2,10 @@ package com.wspiernik.api.websocket.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wspiernik.infrastructure.persistence.entity.Fact;
+import com.wspiernik.domain.facts.Fact;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * DTO for fact data in WebSocket messages.
@@ -12,10 +13,9 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record FactDto(
         @JsonProperty("id") Long id,
-        @JsonProperty("type") String type,
+        @JsonProperty("tags") List<String> tags,
         @JsonProperty("value") String value,
         @JsonProperty("severity") Integer severity,
-        @JsonProperty("context") String context,
         @JsonProperty("extracted_at") LocalDateTime extractedAt
 ) {
     /**
@@ -24,10 +24,9 @@ public record FactDto(
     public static FactDto from(Fact fact) {
         return new FactDto(
                 fact.id,
-                fact.factType,
+                fact.tags,
                 fact.factValue,
                 fact.severity,
-                fact.context,
                 fact.extractedAt
         );
     }

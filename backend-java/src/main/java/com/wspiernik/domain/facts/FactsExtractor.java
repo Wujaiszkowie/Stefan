@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.PromptTemplates;
-import com.wspiernik.infrastructure.persistence.entity.Fact;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
@@ -145,16 +144,9 @@ public class FactsExtractor {
      * Check if two facts are similar (same type and high string similarity).
      */
     private boolean isSimilarFact(ExtractedFact newFact, Fact existing) {
-        // Must be same type
-        if (!newFact.type().equalsIgnoreCase(existing.factType)) {
-            return false;
-        }
 
-        // Check string similarity of values
-        String normalizedNew = normalizeForComparison(newFact.value());
-        String normalizedExisting = normalizeForComparison(existing.factValue);
-
-        return calculateSimilarity(normalizedNew, normalizedExisting) >= SIMILARITY_THRESHOLD;
+        //TODO: to ma LLM robić
+        return false;
     }
 
     /**
@@ -166,26 +158,4 @@ public class FactsExtractor {
         return normalized.replaceAll("\\p{M}", ""); // Remove diacritical marks
     }
 
-    /**
-     * Calculate Jaccard similarity between two strings (word-based).
-     */
-    private double calculateSimilarity(String s1, String s2) {
-        if (s1.equals(s2)) return 1.0;
-        if (s1.isEmpty() || s2.isEmpty()) return 0.0;
-
-        // Word-based Jaccard similarity
-        String[] words1 = s1.split("\\s+");
-        String[] words2 = s2.split("\\s+");
-
-        java.util.Set<String> set1 = new java.util.HashSet<>(java.util.Arrays.asList(words1));
-        java.util.Set<String> set2 = new java.util.HashSet<>(java.util.Arrays.asList(words2));
-
-        java.util.Set<String> intersection = new java.util.HashSet<>(set1);
-        intersection.retainAll(set2);
-
-        java.util.Set<String> union = new java.util.HashSet<>(set1);
-        union.addAll(set2);
-
-        return (double) intersection.size() / union.size();
-    }
 }

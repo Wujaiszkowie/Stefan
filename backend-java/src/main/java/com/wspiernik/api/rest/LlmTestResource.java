@@ -1,5 +1,7 @@
 package com.wspiernik.api.rest;
 
+import com.wspiernik.api.websocket.ConversationSessionManager;
+import com.wspiernik.domain.survey.SurveyService;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.PromptTemplates;
 import jakarta.inject.Inject;
@@ -25,6 +27,9 @@ public class LlmTestResource {
 
     @Inject
     PromptTemplates promptTemplates;
+
+    @Inject
+    SurveyService surveyService;
 
     public record TestRequest(String message) {}
     public record TestResponse(String response, boolean success, String error) {}
@@ -83,4 +88,30 @@ public class LlmTestResource {
             return new TestResponse(null, false, e.getMessage());
         }
     }
+
+    @POST
+    @Path("/survey-start")
+    public TestResponse surveyStart(ConversationSessionManager.ConversationSession session) {
+        try {
+
+            var result = surveyService.startSurvey(session);
+            return new TestResponse(result.toString(), true, null);
+        } catch (Exception e) {
+            return new TestResponse(null, false, e.getMessage());
+        }
+    }
+
+    @POST
+    @Path("/survey-continue")
+    public TestResponse surveyContinue(ConversationSessionManager.ConversationSession session,
+                                       @QueryParam("message") String message) {
+        try {
+            var result = surveyService.processMessage(session, message);
+            return new TestResponse(result.toString(), true, null);
+        } catch (Exception e) {
+            return new TestResponse(null, false, e.getMessage());
+        }
+    }
+
+
 }

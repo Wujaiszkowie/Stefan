@@ -1,6 +1,6 @@
 package com.wspiernik.domain.events;
 
-import com.wspiernik.infrastructure.persistence.entity.Fact;
+import com.wspiernik.domain.facts.Fact;
 
 import java.util.List;
 

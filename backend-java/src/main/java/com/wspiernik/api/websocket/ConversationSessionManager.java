@@ -32,7 +32,6 @@ public class ConversationSessionManager {
     public static class ConversationSession {
         public String sessionId;
         public String connectionId;  // WebSocket connection ID for async notifications
-        public String caregiverId;
         public String conversationType; // "survey", "intervention", "support"
         public Long conversationId;
         public int currentStep;

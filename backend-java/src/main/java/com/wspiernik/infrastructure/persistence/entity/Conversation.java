@@ -23,9 +23,6 @@ public class Conversation extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @Column(name = "caregiver_id")
-    public String caregiverId;
-
     @Column(name = "conversation_type")
     public String conversationType; // "survey", "intervention", "support"
 
@@ -46,13 +43,6 @@ public class Conversation extends PanacheEntityBase {
 
     @Column(name = "created_at")
     public LocalDateTime createdAt;
-
-    /**
-     * Find conversations by caregiver ID.
-     */
-    public static List<Conversation> findByCaregiverId(String caregiverId) {
-        return list("caregiverId", caregiverId);
-    }
 
     /**
      * Find conversations by type.

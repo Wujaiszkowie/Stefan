@@ -2,13 +2,11 @@ package com.wspiernik.infrastructure.llm;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wspiernik.infrastructure.persistence.entity.CaregiverProfile;
+import com.wspiernik.domain.facts.Fact;
 import com.wspiernik.infrastructure.persistence.entity.CrisisScenario;
-import com.wspiernik.infrastructure.persistence.entity.Fact;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,10 +54,7 @@ public class PromptTemplates {
 
     private static final String SUPPORT_PROMPT_TEMPLATE = """
             Ty jesteś wspierającym asystentem dla opiekunów osób starszych i chorych.
-
-            Kontekst podopiecznego:
-            {profile_context}
-
+            
             Ostatnie zdarzenia i fakty:
             {facts_context}
 
@@ -92,20 +87,22 @@ public class PromptTemplates {
             Fakty powinny być w formacie JSON (tablica obiektów):
             [
               {
-                "type": "symptom|medication|event|condition|limitation",
+                "tags": "lista klasyfikacji faktu",
                 "value": "krótki opis faktu",
                 "severity": 1-10 (opcjonalnie, dla symptomów i zdarzeń),
                 "context": "dodatkowy kontekst jeśli potrzebny"
               }
             ]
-
-            TYPY FAKTÓW:
+            
+            PRZYKŁADOWE TYPY FAKTÓW:
             - symptom: objawy zdrowotne (np. "ból głowy", "zawroty głowy", "gorączka")
             - medication: leki (np. "Aspirin 500mg 2x dziennie")
             - event: zdarzenia medyczne (np. "upadek ze schodów", "utrata przytomności")
             - condition: stany/choroby (np. "cukrzyca", "nadciśnienie")
             - limitation: ograniczenia (np. "trudności z chodzeniem", "słaby wzrok")
-
+            - caregiver: informacje dotyczące opiekuna
+            - ward: informacje dotyczące osoby pod opieką 
+            
             WAŻNE:
             - Wyciągaj TYLKO nowe fakty, które NIE są już znane
             - Nie powtarzaj faktów z poniższej listy znanych faktów
@@ -128,10 +125,7 @@ public class PromptTemplates {
 
     private static final String GENERIC_INTERVENTION_PROMPT_TEMPLATE = """
             Ty jesteś asystentem wspomagającym opiekuna w sytuacji wymagającej interwencji.
-
-            Profil podopiecznego:
-            {profile_context}
-
+            
             Znane fakty:
             {facts_context}
 
@@ -165,36 +159,30 @@ public class PromptTemplates {
     /**
      * Build the support module prompt with profile and facts context.
      */
-    public String buildSupportPrompt(CaregiverProfile profile, List<Fact> facts) {
-        String profileContext = formatProfileContext(profile);
+    public String buildSupportPrompt(List<Fact> facts) {
         String factsContext = formatFactsContext(facts);
 
         return SUPPORT_PROMPT_TEMPLATE
-                .replace("{profile_context}", profileContext)
                 .replace("{facts_context}", factsContext);
     }
 
     /**
      * Build the intervention prompt using scenario's system prompt.
      */
-    public String buildInterventionPrompt(CaregiverProfile profile, List<Fact> facts, CrisisScenario scenario) {
-        String profileJson = formatProfileAsJson(profile);
+    public String buildInterventionPrompt(List<Fact> facts, CrisisScenario scenario) {
         String factsJson = formatFactsAsJson(facts);
 
         return scenario.systemPrompt
-                .replace("{profile_json}", profileJson)
                 .replace("{facts_json}", factsJson);
     }
 
     /**
      * Build a generic intervention prompt when no scenario matched.
      */
-    public String buildGenericInterventionPrompt(CaregiverProfile profile, List<Fact> facts, String situationDescription) {
-        String profileContext = formatProfileContext(profile);
+    public String buildGenericInterventionPrompt(List<Fact> facts, String situationDescription) {
         String factsContext = formatFactsContext(facts);
 
         return GENERIC_INTERVENTION_PROMPT_TEMPLATE
-                .replace("{profile_context}", profileContext)
                 .replace("{facts_context}", factsContext)
                 .replace("{situation_description}", situationDescription);
     }
@@ -210,32 +198,6 @@ public class PromptTemplates {
                 .replace("{transcript}", transcript);
     }
 
-    // =========================================================================
-    // Helper Methods
-    // =========================================================================
-
-    private String formatProfileContext(CaregiverProfile profile) {
-        if (profile == null) {
-            return "Brak danych o podopiecznym";
-        }
-
-        StringBuilder sb = new StringBuilder();
-        if (profile.wardAge != null) {
-            sb.append("- Wiek: ").append(profile.wardAge).append(" lat\n");
-        }
-        if (profile.wardConditions != null && !profile.wardConditions.isBlank()) {
-            sb.append("- Choroby: ").append(profile.wardConditions).append("\n");
-        }
-        if (profile.wardMedications != null && !profile.wardMedications.isBlank()) {
-            sb.append("- Leki: ").append(profile.wardMedications).append("\n");
-        }
-        if (profile.wardMobilityLimits != null && !profile.wardMobilityLimits.isBlank()) {
-            sb.append("- Ograniczenia ruchowe: ").append(profile.wardMobilityLimits).append("\n");
-        }
-
-        return sb.length() > 0 ? sb.toString() : "Brak szczegółowych danych";
-    }
-
     private String formatFactsContext(List<Fact> facts) {
         if (facts == null || facts.isEmpty()) {
             return "Brak zarejestrowanych faktów";
@@ -248,7 +210,7 @@ public class PromptTemplates {
                 sb.append("... i ").append(facts.size() - 10).append(" więcej\n");
                 break;
             }
-            sb.append("- [").append(fact.factType).append("] ").append(fact.factValue);
+            sb.append("- [").append(fact.tags).append("] ").append(fact.factValue);
             if (fact.severity != null) {
                 sb.append(" (poziom: ").append(fact.severity).append("/10)");
             }
@@ -257,24 +219,6 @@ public class PromptTemplates {
         }
 
         return sb.toString();
-    }
-
-    private String formatProfileAsJson(CaregiverProfile profile) {
-        if (profile == null) {
-            return "{}";
-        }
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("wardAge", profile.wardAge);
-        map.put("wardConditions", profile.wardConditions);
-        map.put("wardMedications", profile.wardMedications);
-        map.put("wardMobilityLimits", profile.wardMobilityLimits);
-
-        try {
-            return objectMapper.writeValueAsString(map);
-        } catch (JsonProcessingException e) {
-            return "{}";
-        }
     }
 
     private String formatFactsAsJson(List<Fact> facts) {
@@ -286,7 +230,7 @@ public class PromptTemplates {
             return objectMapper.writeValueAsString(
                     facts.stream()
                             .map(f -> Map.of(
-                                    "type", f.factType != null ? f.factType : "",
+                                    "type", f.tags != null ? f.tags : "",
                                     "value", f.factValue != null ? f.factValue : "",
                                     "severity", f.severity != null ? f.severity : 0
                             ))
@@ -304,7 +248,7 @@ public class PromptTemplates {
 
         StringBuilder sb = new StringBuilder();
         for (Fact fact : facts) {
-            sb.append("- [").append(fact.factType).append("] ").append(fact.factValue).append("\n");
+            sb.append("- [").append(fact.tags).append("] ").append(fact.factValue).append("\n");
         }
         return sb.toString();
     }

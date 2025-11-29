@@ -1,18 +1,16 @@
 package com.wspiernik.api.websocket;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.wspiernik.api.websocket.dto.ErrorPayload;
 import com.wspiernik.api.websocket.dto.OutgoingMessage;
-import com.wspiernik.infrastructure.logging.SqliteLogger;
 import io.quarkus.websockets.next.WebSocketConnection;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.PersistenceException;
-import org.jboss.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
@@ -23,7 +21,7 @@ import java.util.concurrent.TimeoutException;
 @ApplicationScoped
 public class WebSocketErrorHandler {
 
-    private static final Logger LOG = Logger.getLogger(WebSocketErrorHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WebSocketErrorHandler.class);
 
     // Error codes
     public static final String CODE_PARSE_ERROR = "PARSE_ERROR";
@@ -44,9 +42,6 @@ public class WebSocketErrorHandler {
             CODE_SESSION_ERROR, "Sesja nie istnieje. Rozpocznij nową rozmowę.",
             CODE_INTERNAL_ERROR, "Wystąpił nieoczekiwany błąd"
     );
-
-    @Inject
-    SqliteLogger sqliteLogger;
 
     @Inject
     MessageSender messageSender;
@@ -71,12 +66,12 @@ public class WebSocketErrorHandler {
     public void handleError(WebSocketConnection connection, String errorCode, String customMessage, String requestId) {
         String userMessage = customMessage != null ? customMessage : getUserMessage(errorCode);
 
-        // Log to database
-        sqliteLogger.error(SqliteLogger.MODULE_WEBSOCKET, userMessage, Map.of(
-                "errorCode", errorCode,
-                "connectionId", connection.id(),
-                "requestId", requestId != null ? requestId : ""
-        ));
+        LOG.error("{}, errorCode : {} connectionId : {} requestID : {}",
+                userMessage,
+                errorCode,
+                connection.id(),
+                requestId != null ? requestId : ""
+        );
 
         // Send error response
         sendErrorResponse(connection, errorCode, userMessage, requestId);
@@ -117,15 +112,13 @@ public class WebSocketErrorHandler {
      * Log error to database with full details.
      */
     private void logError(WebSocketConnection connection, Throwable error, String errorCode, String requestId) {
-        Map<String, Object> details = new HashMap<>();
-        details.put("errorCode", errorCode);
-        details.put("connectionId", connection.id());
-        details.put("requestId", requestId != null ? requestId : "");
-        details.put("exceptionClass", error.getClass().getName());
-        details.put("exceptionMessage", error.getMessage() != null ? error.getMessage() : "");
-        details.put("stackTrace", getStackTrace(error));
 
-        sqliteLogger.error(SqliteLogger.MODULE_WEBSOCKET, error.getMessage(), details);
+        LOG.error("{} errorCode : {} connectionId : {} requestID : {}",
+                error.getMessage(),
+                errorCode,
+                connection.id(),
+                requestId != null ? requestId : "",
+                error);
     }
 
     /**
@@ -136,7 +129,7 @@ public class WebSocketErrorHandler {
             OutgoingMessage errorMessage = OutgoingMessage.error(userMessage, errorCode, requestId);
             messageSender.send(connection, errorMessage);
         } catch (Exception e) {
-            LOG.errorf(e, "Failed to send error response to %s", connection.id());
+            LOG.error("Failed to send error response to {}", connection.id(), e);
         }
     }
 

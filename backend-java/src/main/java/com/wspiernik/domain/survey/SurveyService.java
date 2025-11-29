@@ -2,11 +2,11 @@ package com.wspiernik.domain.survey;
 
 import com.wspiernik.api.websocket.ConversationSessionManager.ConversationSession;
 import com.wspiernik.domain.events.ConversationCompletedEvent;
+import com.wspiernik.domain.facts.Fact;
+import com.wspiernik.domain.facts.FactRepository;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.dto.LlmMessage;
-import com.wspiernik.infrastructure.persistence.entity.CaregiverProfile;
 import com.wspiernik.infrastructure.persistence.entity.Conversation;
-import com.wspiernik.infrastructure.persistence.repository.CaregiverProfileRepository;
 import com.wspiernik.infrastructure.persistence.repository.ConversationRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -35,7 +35,7 @@ public class SurveyService {
     ConversationRepository conversationRepository;
 
     @Inject
-    CaregiverProfileRepository profileRepository;
+    FactRepository factRepository;
 
     @Inject
     Event<ConversationCompletedEvent> conversationCompletedEvent;
@@ -125,17 +125,17 @@ public class SurveyService {
             lowerMessage.contains("potwierdz") || lowerMessage.contains("ok") ||
             lowerMessage.contains("dobrze")) {
 
-            // Move to completed
-            state.moveToNextStep();
 
             // Save profile
-            saveCaregiverProfile(state);
+            saveNewFacts(state);
+
+            // Move to completed
+            state.moveToNextStep();
 
             // Fire event for facts extraction
             String transcript = buildTranscript(session);
             conversationCompletedEvent.fireAsync(new ConversationCompletedEvent(
                     state.getConversationId(),
-                    null,  // caregiverId not set for survey
                     "survey",
                     transcript,
                     session.connectionId
@@ -170,6 +170,49 @@ public class SurveyService {
         session.addMessage("assistant", clarifyMessage);
 
         return new SurveyMessageResult(clarifyMessage, state.getCurrentStep(), false);
+    }
+
+    private void saveNewFacts(final SurveyState state) {
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            var newFact = new Fact();
+            newFact.conversationId = state.getConversationId();
+
+            switch (state.getCurrentStep()) {
+                case WARD_AGE -> {
+                    newFact.tags = List.of("age", "ward");
+                    newFact.factValue = "Wiek " + state.getWardAge();
+                    factRepository.persist(newFact);
+                }
+                case WARD_CONDITIONS -> {
+                    newFact.tags = List.of("conditions", "ward");
+                    newFact.factValue = "Dolegliwości " + state.getWardConditions();
+                    factRepository.persist(newFact);
+                }
+                case WARD_MEDICATIONS -> {
+                    newFact.tags = List.of("medications", "ward");
+                    newFact.factValue = "Leki " + state.getWardConditions();
+                    factRepository.persist(newFact);
+                }
+                case WARD_MOBILITY -> {
+                    newFact.tags = List.of("mobility", "ward");
+                    newFact.factValue = "Mobilność " + state.getWardConditions();
+                    factRepository.persist(newFact);
+                }
+                case WARD_OTHER -> {
+                    newFact.tags = List.of("other", "ward");
+                    newFact.factValue = "Dodatkowe " + state.getWardConditions();
+                    factRepository.persist(newFact);
+                }
+                case CONFIRMATION -> {
+                }
+                case COMPLETED -> {
+                }
+                default -> {
+                }
+            }
+        });
+
     }
 
     /**
@@ -275,44 +318,6 @@ public class SurveyService {
             case CONFIRMATION -> "Czy dane są poprawne?";
             case COMPLETED -> "Dziękuję za wypełnienie ankiety!";
         };
-    }
-
-    /**
-     * Save collected profile data to database.
-     */
-    private void saveCaregiverProfile(SurveyState state) {
-        QuarkusTransaction.requiringNew().run(() -> {
-            // Check if profile already exists
-            CaregiverProfile profile = profileRepository.findAll().firstResult();
-
-            if (profile == null) {
-                profile = new CaregiverProfile();
-            }
-
-            // Update profile with survey data
-            profile.wardAge = parseAge(state.getWardAge());
-            profile.wardConditions = state.getWardConditions();
-            profile.wardMedications = state.getWardMedications();
-            profile.wardMobilityLimits = state.getWardMobility();
-            profile.wardOtherInfo = state.getWardOther();
-            profile.updatedAt = java.time.LocalDateTime.now();
-            if (profile.createdAt == null) {
-                profile.createdAt = java.time.LocalDateTime.now();
-            }
-
-            profileRepository.persist(profile);
-
-            // Update conversation end time
-            if (state.getConversationId() != null) {
-                Conversation conversation = conversationRepository.findById(state.getConversationId());
-                if (conversation != null) {
-                    conversation.endedAt = java.time.LocalDateTime.now();
-                    conversationRepository.persist(conversation);
-                }
-            }
-
-            LOG.info("Saved caregiver profile from survey");
-        });
     }
 
     /**

@@ -13,13 +13,6 @@ import java.util.List;
 public class ConversationRepository implements PanacheRepository<Conversation> {
 
     /**
-     * Find conversations by caregiver ID.
-     */
-    public List<Conversation> findByCaregiverId(String caregiverId) {
-        return list("caregiverId", caregiverId);
-    }
-
-    /**
      * Find conversations by type (survey, intervention, support).
      */
     public List<Conversation> findByConversationType(String type) {

@@ -4,9 +4,7 @@ import com.wspiernik.api.websocket.WspiernikSocket;
 import com.wspiernik.api.websocket.dto.OutgoingMessage;
 import com.wspiernik.domain.events.ConversationCompletedEvent;
 import com.wspiernik.domain.events.FactsExtractedEvent;
-import com.wspiernik.infrastructure.persistence.entity.Fact;
 import com.wspiernik.infrastructure.persistence.repository.ConversationRepository;
-import com.wspiernik.infrastructure.persistence.repository.FactRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.websockets.next.WebSocketConnection;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -137,15 +135,14 @@ public class FactsDistillerService {
             for (ExtractedFact ef : extracted) {
                 Fact fact = new Fact();
                 fact.conversationId = conversationId;
-                fact.factType = ef.type();
+                fact.tags = ef.tags();
                 fact.factValue = ef.value();
                 fact.severity = ef.severity();
-                fact.context = ef.context();
                 fact.extractedAt = now;
                 fact.createdAt = now;
                 factRepository.persist(fact);
                 saved.add(fact);
-                LOG.debugf("Saved fact: [%s] %s", ef.type(), ef.value());
+                LOG.debugf("Saved fact: [%s] %s", ef.tags(), ef.value());
             }
 
             return saved;
@@ -224,13 +221,10 @@ public class FactsDistillerService {
     private Map<String, Object> factToMap(Fact fact) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", fact.id);
-        map.put("type", fact.factType);
+        map.put("type", fact.tags);
         map.put("value", fact.factValue);
         if (fact.severity != null) {
             map.put("severity", fact.severity);
-        }
-        if (fact.context != null && !fact.context.isBlank()) {
-            map.put("context", fact.context);
         }
         return map;
     }
@@ -243,5 +237,6 @@ public class FactsDistillerService {
             int factsCount,
             List<Fact> facts,
             String errorMessage
-    ) {}
+    ) {
+    }
 }

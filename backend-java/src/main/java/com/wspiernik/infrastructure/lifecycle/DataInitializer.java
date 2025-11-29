@@ -1,7 +1,6 @@
 package com.wspiernik.infrastructure.lifecycle;
 
 import com.wspiernik.infrastructure.persistence.entity.CrisisScenario;
-import com.wspiernik.infrastructure.persistence.repository.BackendLogRepository;
 import com.wspiernik.infrastructure.persistence.repository.CrisisScenarioRepository;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -26,9 +25,6 @@ public class DataInitializer {
 
     @Inject
     CrisisScenarioRepository scenarioRepository;
-
-    @Inject
-    BackendLogRepository logRepository;
 
     @Transactional
     void onStart(@Observes StartupEvent ev) {

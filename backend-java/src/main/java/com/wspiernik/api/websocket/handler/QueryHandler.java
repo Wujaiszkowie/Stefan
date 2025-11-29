@@ -12,9 +12,4 @@ public interface QueryHandler {
      * Get facts list.
      */
     void getFacts(WebSocketConnection connection, IncomingMessage message);
-
-    /**
-     * Get profile data.
-     */
-    void getProfile(WebSocketConnection connection, IncomingMessage message);
 }

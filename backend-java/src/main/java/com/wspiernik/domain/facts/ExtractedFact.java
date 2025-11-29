@@ -1,18 +1,19 @@
 package com.wspiernik.domain.facts;
 
+import java.util.List;
+
 /**
  * DTO representing a fact extracted from a conversation by the LLM.
  */
 public record ExtractedFact(
-        String type,       // "symptom", "medication", "event", "condition", "limitation"
-        String value,      // Short description of the fact
-        Integer severity,  // 1-10 (nullable, mainly for symptoms and events)
-        String context     // Additional context if needed
+        List<String> tags,
+        String value,
+        Integer severity
 ) {
     /**
      * Check if this is a valid fact with required fields.
      */
     public boolean isValid() {
-        return type != null && !type.isBlank() && value != null && !value.isBlank();
+        return tags != null && !tags.isEmpty() && value != null && !value.isBlank();
     }
 }

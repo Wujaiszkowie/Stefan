@@ -2,17 +2,13 @@ package com.wspiernik.domain.support;
 
 import com.wspiernik.api.websocket.ConversationSessionManager.ConversationSession;
 import com.wspiernik.domain.events.ConversationCompletedEvent;
+import com.wspiernik.domain.facts.Fact;
+import com.wspiernik.domain.facts.FactRepository;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.PromptTemplates;
 import com.wspiernik.infrastructure.llm.dto.LlmMessage;
-import com.wspiernik.infrastructure.persistence.entity.CaregiverProfile;
-import com.wspiernik.infrastructure.persistence.entity.CaregiverSupportLog;
 import com.wspiernik.infrastructure.persistence.entity.Conversation;
-import com.wspiernik.infrastructure.persistence.entity.Fact;
-import com.wspiernik.infrastructure.persistence.repository.CaregiverProfileRepository;
-import com.wspiernik.infrastructure.persistence.repository.CaregiverSupportLogRepository;
 import com.wspiernik.infrastructure.persistence.repository.ConversationRepository;
-import com.wspiernik.infrastructure.persistence.repository.FactRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
@@ -45,13 +41,7 @@ public class SupportService {
     ConversationRepository conversationRepository;
 
     @Inject
-    CaregiverProfileRepository profileRepository;
-
-    @Inject
     FactRepository factRepository;
-
-    @Inject
-    CaregiverSupportLogRepository supportLogRepository;
 
     @Inject
     Event<ConversationCompletedEvent> conversationCompletedEvent;
@@ -121,7 +111,7 @@ public class SupportService {
             response = response.replace(SUPPORT_COMPLETE_MARKER, "").trim();
 
             // Save support log
-            saveSupportLog(state, session);
+            saveFacts(state, session);
         }
 
         session.addMessage("assistant", response);
@@ -150,7 +140,7 @@ public class SupportService {
         session.addMessage("assistant", farewell);
 
         // Save support log
-        saveSupportLog(state, session);
+        saveFacts(state, session);
 
         // Update conversation end time
         String transcript = buildTranscript(session);
@@ -168,7 +158,6 @@ public class SupportService {
         // Fire event for facts extraction
         conversationCompletedEvent.fireAsync(new ConversationCompletedEvent(
                 state.getConversationId(),
-                session.caregiverId,
                 "support",
                 transcript,
                 session.connectionId
@@ -177,14 +166,17 @@ public class SupportService {
         return new SupportCompleteResult(state.getConversationId(), farewell);
     }
 
+    private void saveFacts(final SupportState state, final ConversationSession session) {
+        //TODO: implement
+    }
+
     /**
      * Generate greeting message.
      */
     private String generateGreeting(SupportState state, ConversationSession session) {
-        CaregiverProfile profile = getProfile();
-        List<Fact> facts = getRecentFacts();
+        List<Fact> facts = getFacts();
 
-        String systemPrompt = promptTemplates.buildSupportPrompt(profile, facts);
+        String systemPrompt = promptTemplates.buildSupportPrompt(facts);
 
         List<LlmMessage> messages = new ArrayList<>();
         messages.add(new LlmMessage("system", systemPrompt));
@@ -204,10 +196,9 @@ public class SupportService {
      * Generate response to user message.
      */
     private String generateResponse(SupportState state, ConversationSession session) {
-        CaregiverProfile profile = getProfile();
-        List<Fact> facts = getRecentFacts();
+        List<Fact> facts = getFacts();
 
-        String systemPrompt = promptTemplates.buildSupportPrompt(profile, facts);
+        String systemPrompt = promptTemplates.buildSupportPrompt(facts);
 
         List<LlmMessage> messages = new ArrayList<>();
         messages.add(new LlmMessage("system", systemPrompt));
@@ -255,20 +246,6 @@ public class SupportService {
     }
 
     /**
-     * Save support log entry.
-     */
-    private void saveSupportLog(SupportState state, ConversationSession session) {
-        QuarkusTransaction.requiringNew().run(() -> {
-            CaregiverSupportLog log = new CaregiverSupportLog();
-            log.stressLevel = state.getStressLevel();
-            log.needs = state.getIdentifiedNeeds();
-            log.createdAt = LocalDateTime.now();
-            supportLogRepository.persist(log);
-            LOG.info("Saved support log entry");
-        });
-    }
-
-    /**
      * Build transcript from message history.
      */
     private String buildTranscript(ConversationSession session) {
@@ -281,20 +258,11 @@ public class SupportService {
     }
 
     /**
-     * Get caregiver profile.
-     */
-    private CaregiverProfile getProfile() {
-        return QuarkusTransaction.requiringNew().call(() ->
-                profileRepository.findAll().firstResult()
-        );
-    }
-
-    /**
      * Get recent facts.
      */
-    private List<Fact> getRecentFacts() {
+    private List<Fact> getFacts() {
         return QuarkusTransaction.requiringNew().call(() ->
-                factRepository.findRecentFacts(10)
+                factRepository.findAllFacts()
         );
     }
 

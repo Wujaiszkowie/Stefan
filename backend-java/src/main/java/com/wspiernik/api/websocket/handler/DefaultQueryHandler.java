@@ -1,15 +1,12 @@
 package com.wspiernik.api.websocket.handler;
 
+import com.wspiernik.api.websocket.MessageSender;
 import com.wspiernik.api.websocket.dto.FactDto;
 import com.wspiernik.api.websocket.dto.FactsListPayload;
 import com.wspiernik.api.websocket.dto.IncomingMessage;
 import com.wspiernik.api.websocket.dto.OutgoingMessage;
-import com.wspiernik.api.websocket.dto.ProfileDataPayload;
-import com.wspiernik.api.websocket.MessageSender;
-import com.wspiernik.infrastructure.persistence.entity.CaregiverProfile;
-import com.wspiernik.infrastructure.persistence.entity.Fact;
-import com.wspiernik.infrastructure.persistence.repository.CaregiverProfileRepository;
-import com.wspiernik.infrastructure.persistence.repository.FactRepository;
+import com.wspiernik.domain.facts.Fact;
+import com.wspiernik.domain.facts.FactRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.websockets.next.WebSocketConnection;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -33,9 +30,6 @@ public class DefaultQueryHandler implements QueryHandler {
     @Inject
     FactRepository factRepository;
 
-    @Inject
-    CaregiverProfileRepository profileRepository;
-
     @Override
     public void getFacts(WebSocketConnection connection, IncomingMessage message) {
         LOG.debugf("Getting facts, limit: %d", message.getLimit());
@@ -44,7 +38,7 @@ public class DefaultQueryHandler implements QueryHandler {
 
         // Use QuarkusTransaction for database access in WebSocket context
         FactsListPayload payload = QuarkusTransaction.requiringNew().call(() -> {
-            List<Fact> facts = factRepository.findRecentFacts(limit);
+            List<Fact> facts = factRepository.findAllFacts();
             long totalCount = factRepository.count();
 
             List<FactDto> factDtos = facts.stream()
@@ -56,21 +50,5 @@ public class DefaultQueryHandler implements QueryHandler {
 
         messageSender.send(connection, OutgoingMessage.of(
                 OutgoingMessage.FACTS_LIST, payload, message.requestId()));
-    }
-
-    @Override
-    public void getProfile(WebSocketConnection connection, IncomingMessage message) {
-        LOG.debug("Getting profile");
-
-        // Use QuarkusTransaction for database access in WebSocket context
-        ProfileDataPayload payload = QuarkusTransaction.requiringNew().call(() -> {
-            // For now, get the first profile (single user mode)
-            // In multi-user mode, would use connection ID or auth token to identify user
-            CaregiverProfile profile = profileRepository.findAll().firstResult();
-            return ProfileDataPayload.from(profile);
-        });
-
-        messageSender.send(connection, OutgoingMessage.of(
-                OutgoingMessage.PROFILE_DATA, payload, message.requestId()));
     }
 }
