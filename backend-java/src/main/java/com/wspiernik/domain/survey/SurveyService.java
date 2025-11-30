@@ -322,7 +322,7 @@ public class SurveyService {
     private String buildTranscript(ConversationSession session) {
         StringBuilder sb = new StringBuilder();
         for (LlmMessage msg : session.messageHistory) {
-            String role = "user".equals(msg.role()) ? "Opiekun" : "Stefan";
+            String role = "user".equals(msg.role()) ? "Caregiver" : "Ward";
             sb.append(role).append(": ").append(msg.content()).append("\n\n");
         }
         return sb.toString();

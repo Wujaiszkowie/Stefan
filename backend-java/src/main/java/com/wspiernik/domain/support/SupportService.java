@@ -17,9 +17,9 @@ import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service handling support conversation business logic.
@@ -229,7 +229,7 @@ public class SupportService {
     private String buildTranscript(ConversationSession session) {
         StringBuilder sb = new StringBuilder();
         for (LlmMessage msg : session.messageHistory) {
-            String role = "user".equals(msg.role()) ? "Opiekun" : "Stefan";
+            String role = "user".equals(msg.role()) ? "Caregiver" : "Ward";
             sb.append(role).append(": ").append(msg.content()).append("\n\n");
         }
         return sb.toString();
@@ -254,7 +254,7 @@ public class SupportService {
         conversationCompletedEvent.fireAsync(new ConversationCompletedEvent(
                 state.getConversationId(),
                 "support",
-                "without summary",
+                session.messageHistory.stream().map(LlmMessage::toString).collect(Collectors.joining(",")),
                 session.connectionId
         ));
     }
