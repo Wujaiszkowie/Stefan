@@ -135,14 +135,14 @@ public class FactsDistillerService {
             for (ExtractedFact ef : extracted) {
                 Fact fact = new Fact();
                 fact.conversationId = conversationId;
-                fact.factType = ef.tags();
+                fact.tags = ef.tags();
                 fact.factValue = ef.value();
                 fact.severity = ef.severity();
                 fact.extractedAt = now;
                 fact.createdAt = now;
                 factRepository.persist(fact);
                 saved.add(fact);
-                LOG.debugf("Saved fact: [%s] %s", fact.factType, fact.factValue);
+                LOG.debugf("Saved fact: [%s] %s", ef.tags(), ef.value());
             }
 
             return saved;
@@ -221,7 +221,7 @@ public class FactsDistillerService {
     private Map<String, Object> factToMap(Fact fact) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", fact.id);
-        map.put("type", fact.factType);
+        map.put("type", fact.tags);
         map.put("value", fact.factValue);
         if (fact.severity != null) {
             map.put("severity", fact.severity);
