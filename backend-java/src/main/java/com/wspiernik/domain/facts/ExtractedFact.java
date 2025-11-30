@@ -17,7 +17,7 @@ public record ExtractedFact(
         @JsonProperty("severity")
         Integer severity,
         @JsonProperty("context")
-        Integer context
+        String context
 ) {
     /**
      * Check if this is a valid fact with required fields.
