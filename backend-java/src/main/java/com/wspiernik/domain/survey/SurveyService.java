@@ -5,6 +5,7 @@ import com.wspiernik.domain.conversation.ConversationService;
 import com.wspiernik.domain.events.ConversationCompletedEvent;
 import com.wspiernik.domain.facts.Fact;
 import com.wspiernik.domain.facts.FactRepository;
+import com.wspiernik.domain.facts.FactsDistillerService;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.dto.LlmMessage;
 import com.wspiernik.domain.conversation.Conversation;
@@ -82,17 +83,12 @@ public class SurveyService {
         // Add user message to history
         session.addMessage("user", userMessage);
 
-        // Handle confirmation step specially
-        if (state.getCurrentStep().isConfirmation()) {
-            return handleConfirmation(session, state, userMessage);
-        }
-
         // Store response for current step
         state.addResponse(state.getCurrentStep(), userMessage);
 
         // Move to next step
+        saveNewFacts(state);
         state.moveToNextStep();
-
         // Check if we need to show confirmation
         if (state.getCurrentStep().isConfirmation()) {
             String summary = state.buildSummary();
@@ -191,17 +187,17 @@ public class SurveyService {
                 }
                 case WARD_MEDICATIONS -> {
                     newFact.tags = List.of("medications", "ward");
-                    newFact.factValue = "Leki " + state.getWardConditions();
+                    newFact.factValue = "Leki " + state.getWardMedications();
                     factRepository.persist(newFact);
                 }
                 case WARD_MOBILITY -> {
                     newFact.tags = List.of("mobility", "ward");
-                    newFact.factValue = "Mobilność " + state.getWardConditions();
+                    newFact.factValue = "Mobilność " + state.getWardMobility();
                     factRepository.persist(newFact);
                 }
                 case WARD_OTHER -> {
                     newFact.tags = List.of("other", "ward");
-                    newFact.factValue = "Dodatkowe " + state.getWardConditions();
+                    newFact.factValue = "Dodatkowe " + state.getWardOther();
                     factRepository.persist(newFact);
                 }
                 case CONFIRMATION -> {
