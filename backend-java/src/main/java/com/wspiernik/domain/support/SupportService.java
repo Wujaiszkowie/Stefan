@@ -1,14 +1,15 @@
 package com.wspiernik.domain.support;
 
 import com.wspiernik.api.websocket.ConversationSessionManager.ConversationSession;
+import com.wspiernik.domain.conversation.ConversationService;
 import com.wspiernik.domain.events.ConversationCompletedEvent;
 import com.wspiernik.domain.facts.Fact;
 import com.wspiernik.domain.facts.FactRepository;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.PromptTemplates;
 import com.wspiernik.infrastructure.llm.dto.LlmMessage;
-import com.wspiernik.infrastructure.persistence.entity.Conversation;
-import com.wspiernik.infrastructure.persistence.repository.ConversationRepository;
+import com.wspiernik.domain.conversation.Conversation;
+import com.wspiernik.domain.conversation.ConversationRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
@@ -38,7 +39,7 @@ public class SupportService {
     PromptTemplates promptTemplates;
 
     @Inject
-    ConversationRepository conversationRepository;
+    ConversationService conversationService;
 
     @Inject
     FactRepository factRepository;
@@ -56,14 +57,7 @@ public class SupportService {
         SupportState state = new SupportState();
 
         // Create conversation record
-        Long conversationId = QuarkusTransaction.requiringNew().call(() -> {
-            Conversation conversation = new Conversation();
-            conversation.conversationType = "support";
-            conversation.startedAt = LocalDateTime.now();
-            conversation.createdAt = LocalDateTime.now();
-            conversationRepository.persist(conversation);
-            return conversation.id;
-        });
+        Long conversationId = conversationService.startNew("support");
 
         state.setConversationId(conversationId);
         session.conversationId = conversationId;
@@ -82,6 +76,7 @@ public class SupportService {
         }
 
         session.addMessage("assistant", response);
+        conversationService.addMessage(conversationId, new LlmMessage("assistant", response));
         state.incrementMessageCount();
 
         return new SupportStartResult(conversationId, response);
@@ -100,6 +95,7 @@ public class SupportService {
 
         // Add user message to history
         session.addMessage("user", userMessage);
+        conversationService.addMessage(state.getConversationId(), new LlmMessage("user", userMessage));
         state.incrementMessageCount();
 
         // Generate response
@@ -115,6 +111,7 @@ public class SupportService {
         }
 
         session.addMessage("assistant", response);
+        conversationService.addMessage(state.getConversationId(), new LlmMessage("assistant", response));
         state.incrementMessageCount();
 
         // Check if we should suggest ending
@@ -144,16 +141,6 @@ public class SupportService {
 
         // Update conversation end time
         String transcript = buildTranscript(session);
-        QuarkusTransaction.requiringNew().run(() -> {
-            if (state.getConversationId() != null) {
-                Conversation conversation = conversationRepository.findById(state.getConversationId());
-                if (conversation != null) {
-                    conversation.endedAt = LocalDateTime.now();
-                    conversation.rawTranscript = transcript;
-                    conversationRepository.persist(conversation);
-                }
-            }
-        });
 
         // Fire event for facts extraction
         conversationCompletedEvent.fireAsync(new ConversationCompletedEvent(

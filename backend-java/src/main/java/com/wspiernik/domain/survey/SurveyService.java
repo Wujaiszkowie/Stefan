@@ -1,13 +1,14 @@
 package com.wspiernik.domain.survey;
 
 import com.wspiernik.api.websocket.ConversationSessionManager.ConversationSession;
+import com.wspiernik.domain.conversation.ConversationService;
 import com.wspiernik.domain.events.ConversationCompletedEvent;
 import com.wspiernik.domain.facts.Fact;
 import com.wspiernik.domain.facts.FactRepository;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.dto.LlmMessage;
-import com.wspiernik.infrastructure.persistence.entity.Conversation;
-import com.wspiernik.infrastructure.persistence.repository.ConversationRepository;
+import com.wspiernik.domain.conversation.Conversation;
+import com.wspiernik.domain.conversation.ConversationRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
@@ -32,7 +33,7 @@ public class SurveyService {
     LlmClient llmClient;
 
     @Inject
-    ConversationRepository conversationRepository;
+    ConversationService conversationService;
 
     @Inject
     FactRepository factRepository;
@@ -51,14 +52,7 @@ public class SurveyService {
         SurveyState state = new SurveyState();
 
         // Create conversation record in database
-        Long conversationId = QuarkusTransaction.requiringNew().call(() -> {
-            Conversation conversation = new Conversation();
-            conversation.conversationType = "survey";
-            conversation.startedAt = java.time.LocalDateTime.now();
-            conversation.createdAt = java.time.LocalDateTime.now();
-            conversationRepository.persist(conversation);
-            return conversation.id;
-        });
+        Long conversationId = conversationService.startNew("survey");
 
         state.setConversationId(conversationId);
         session.conversationId = conversationId;
@@ -69,6 +63,7 @@ public class SurveyService {
 
         // Add assistant message to history
         session.addMessage("assistant", firstQuestion);
+        conversationService.addMessage(conversationId, new LlmMessage("assistant", firstQuestion));
 
         return new SurveyStartResult(conversationId, firstQuestion, state.getCurrentStep());
     }
@@ -103,6 +98,7 @@ public class SurveyService {
             String summary = state.buildSummary();
             String confirmationMessage = generateConfirmationMessage(summary, session.messageHistory);
             session.addMessage("assistant", confirmationMessage);
+            conversationService.addMessage(state.getConversationId(), new LlmMessage("assistant", confirmationMessage));
             state.setAwaitingConfirmation(true);
             return new SurveyMessageResult(confirmationMessage, state.getCurrentStep(), false);
         }
@@ -110,6 +106,7 @@ public class SurveyService {
         // Generate next question
         String nextQuestion = generateQuestion(state, session.messageHistory);
         session.addMessage("assistant", nextQuestion);
+        conversationService.addMessage(state.getConversationId(), new LlmMessage("assistant", nextQuestion));
 
         return new SurveyMessageResult(nextQuestion, state.getCurrentStep(), false);
     }
@@ -144,6 +141,7 @@ public class SurveyService {
             String completionMessage = "Dziękuję! Twój profil został zapisany. " +
                     "Teraz będę mógł lepiej Ci pomagać w opiece nad podopiecznym.";
             session.addMessage("assistant", completionMessage);
+            conversationService.addMessage(state.getConversationId(), new LlmMessage("assistant", completionMessage));
 
             return new SurveyMessageResult(completionMessage, state.getCurrentStep(), true);
         }
@@ -160,6 +158,7 @@ public class SurveyService {
             String retryMessage = "Rozumiem. Zacznijmy od początku. " +
                     generateQuestion(state, session.messageHistory);
             session.addMessage("assistant", retryMessage);
+            conversationService.addMessage(state.getConversationId(), new LlmMessage("assistant", retryMessage));
 
             return new SurveyMessageResult(retryMessage, state.getCurrentStep(), false);
         }
@@ -168,6 +167,7 @@ public class SurveyService {
         String clarifyMessage = "Przepraszam, nie zrozumiałem. " +
                 "Czy dane są poprawne? Odpowiedz 'tak' aby potwierdzić lub 'nie' aby wprowadzić poprawki.";
         session.addMessage("assistant", clarifyMessage);
+        conversationService.addMessage(state.getConversationId(), new LlmMessage("assistant", clarifyMessage));
 
         return new SurveyMessageResult(clarifyMessage, state.getCurrentStep(), false);
     }

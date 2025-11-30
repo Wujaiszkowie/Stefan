@@ -1,7 +1,11 @@
-package com.wspiernik.infrastructure.persistence.entity;
+package com.wspiernik.domain.conversation;
 
+import com.wspiernik.infrastructure.llm.dto.LlmMessage;
+import com.wspiernik.infrastructure.persistence.JsonToLlmMessageListConverter;
+import com.wspiernik.infrastructure.persistence.JsonToStringListConverter;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,6 +14,7 @@ import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Entity representing a conversation session.
@@ -26,11 +31,9 @@ public class Conversation extends PanacheEntityBase {
     @Column(name = "conversation_type")
     public String conversationType; // "survey", "intervention", "support"
 
-    @Column(name = "scenario_type")
-    public String scenarioType; // "fall", "confusion", "chest_pain" (nullable for support/survey)
-
     @Column(name = "raw_transcript", columnDefinition = "TEXT")
-    public String rawTranscript;
+    @Convert(converter = JsonToLlmMessageListConverter.class)
+    public List<LlmMessage> rawTranscript;
 
     @Column(name = "started_at")
     public LocalDateTime startedAt;
@@ -38,11 +41,13 @@ public class Conversation extends PanacheEntityBase {
     @Column(name = "ended_at")
     public LocalDateTime endedAt;
 
-    @Column(name = "facts_extracted")
-    public Boolean factsExtracted = false;
+    void addMessage(LlmMessage message) {
+        rawTranscript.add(message);
+    }
 
-    @Column(name = "created_at")
-    public LocalDateTime createdAt;
+    public static Optional<Conversation> findById(Long id) {
+        return find("id", id).firstResultOptional();
+    }
 
     /**
      * Find conversations by type.

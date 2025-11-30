@@ -4,7 +4,7 @@ import com.wspiernik.api.websocket.WspiernikSocket;
 import com.wspiernik.api.websocket.dto.OutgoingMessage;
 import com.wspiernik.domain.events.ConversationCompletedEvent;
 import com.wspiernik.domain.events.FactsExtractedEvent;
-import com.wspiernik.infrastructure.persistence.repository.ConversationRepository;
+import com.wspiernik.domain.conversation.ConversationRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.websockets.next.WebSocketConnection;
 import jakarta.enterprise.context.ApplicationScoped;

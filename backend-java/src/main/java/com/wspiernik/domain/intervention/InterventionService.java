@@ -1,6 +1,7 @@
 package com.wspiernik.domain.intervention;
 
 import com.wspiernik.api.websocket.ConversationSessionManager.ConversationSession;
+import com.wspiernik.domain.conversation.ConversationService;
 import com.wspiernik.domain.events.ConversationCompletedEvent;
 import com.wspiernik.domain.facts.Fact;
 import com.wspiernik.domain.facts.FactRepository;
@@ -8,9 +9,9 @@ import com.wspiernik.domain.intervention.ScenarioMatchingService.MatchResult;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.PromptTemplates;
 import com.wspiernik.infrastructure.llm.dto.LlmMessage;
-import com.wspiernik.infrastructure.persistence.entity.Conversation;
+import com.wspiernik.domain.conversation.Conversation;
 import com.wspiernik.infrastructure.persistence.entity.CrisisScenario;
-import com.wspiernik.infrastructure.persistence.repository.ConversationRepository;
+import com.wspiernik.domain.conversation.ConversationRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
@@ -43,7 +44,7 @@ public class InterventionService {
     PromptTemplates promptTemplates;
 
     @Inject
-    ConversationRepository conversationRepository;
+    ConversationService conversationService;
 
     @Inject
     FactRepository factRepository;
@@ -74,16 +75,7 @@ public class InterventionService {
         state.setSituationDescription(isGenericStart ? null : situationDescription);
 
         // Create conversation record
-        Long conversationId = QuarkusTransaction.requiringNew().call(() -> {
-            Conversation conversation = new Conversation();
-            conversation.conversationType = "intervention";
-            conversation.scenarioType = matchResult.matched() ? matchResult.scenario().scenarioKey : null;
-            conversation.startedAt = LocalDateTime.now();
-            conversation.createdAt = LocalDateTime.now();
-            conversationRepository.persist(conversation);
-            return conversation.id;
-        });
-
+        Long conversationId = conversationService.startNew(matchResult.matched() ? matchResult.scenario().scenarioKey : null);
         state.setConversationId(conversationId);
         session.conversationId = conversationId;
 
@@ -119,6 +111,7 @@ public class InterventionService {
         // Store state in session
         session.setContextValue(INTERVENTION_STATE_KEY, state);
         session.addMessage("assistant", firstMessage);
+        conversationService.addMessage(conversationId,new LlmMessage("assistant", firstMessage));
 
         return new InterventionStartResult(
                 conversationId,
@@ -143,6 +136,8 @@ public class InterventionService {
 
         // Add user message to history
         session.addMessage("user", userMessage);
+        var conversationId = state.getConversationId();
+        conversationService.addMessage(conversationId, new LlmMessage("user", userMessage));
 
         // Store response for current question
         state.addResponse(userMessage);
@@ -178,6 +173,7 @@ public class InterventionService {
         }
 
         session.addMessage("assistant", response);
+        conversationService.addMessage(conversationId, new LlmMessage("assistant", response));
 
         return new InterventionMessageResult(
                 response,
@@ -267,19 +263,7 @@ public class InterventionService {
         messages.add(new LlmMessage("user", "Podsumuj poniższą interwencję:\n\n" + summary));
 
         try {
-            String response = llmClient.generateWithHistory(messages);
-
-            // Update conversation end time
-            QuarkusTransaction.requiringNew().run(() -> {
-                if (state.getConversationId() != null) {
-                    Conversation conversation = conversationRepository.findById(state.getConversationId());
-                    if (conversation != null) {
-                        conversation.endedAt = LocalDateTime.now();
-                        conversation.rawTranscript = summary;
-                        conversationRepository.persist(conversation);
-                    }
-                }
-            });
+            String response = llmClient.generateWithHistory(messages);;
 
             // Fire event for facts extraction
             conversationCompletedEvent.fireAsync(new ConversationCompletedEvent(

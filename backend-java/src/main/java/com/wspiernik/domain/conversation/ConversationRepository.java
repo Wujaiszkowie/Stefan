@@ -1,6 +1,5 @@
-package com.wspiernik.infrastructure.persistence.repository;
+package com.wspiernik.domain.conversation;
 
-import com.wspiernik.infrastructure.persistence.entity.Conversation;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 
