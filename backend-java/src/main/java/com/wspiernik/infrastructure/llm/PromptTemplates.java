@@ -89,7 +89,7 @@ public class PromptTemplates {
               {
                 "tags": "lista klasyfikacji faktu",
                 "value": "krótki opis faktu",
-                "severity": 1-10 (opcjonalnie, dla symptomów i zdarzeń),
+                "severity": 1-10 (dla interwencji i wsparcia),
                 "context": "dodatkowy kontekst jeśli potrzebny"
               }
             ]

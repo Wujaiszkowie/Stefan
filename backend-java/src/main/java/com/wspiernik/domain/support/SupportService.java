@@ -5,6 +5,7 @@ import com.wspiernik.domain.conversation.ConversationService;
 import com.wspiernik.domain.events.ConversationCompletedEvent;
 import com.wspiernik.domain.facts.Fact;
 import com.wspiernik.domain.facts.FactRepository;
+import com.wspiernik.domain.intervention.InterventionState;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.PromptTemplates;
 import com.wspiernik.infrastructure.llm.dto.LlmMessage;
@@ -105,9 +106,6 @@ public class SupportService {
         if (response.contains(SUPPORT_COMPLETE_MARKER)) {
             state.setCompleted(true);
             response = response.replace(SUPPORT_COMPLETE_MARKER, "").trim();
-
-            // Save support log
-            saveFacts(state, session);
         }
 
         session.addMessage("assistant", response);
@@ -136,9 +134,6 @@ public class SupportService {
         String farewell = generateFarewell(state, session);
         session.addMessage("assistant", farewell);
 
-        // Save support log
-        saveFacts(state, session);
-
         // Update conversation end time
         String transcript = buildTranscript(session);
 
@@ -151,10 +146,6 @@ public class SupportService {
         ));
 
         return new SupportCompleteResult(state.getConversationId(), farewell);
-    }
-
-    private void saveFacts(final SupportState state, final ConversationSession session) {
-        //TODO: implement
     }
 
     /**
@@ -251,6 +242,21 @@ public class SupportService {
         return QuarkusTransaction.requiringNew().call(() ->
                 factRepository.findAllFacts()
         );
+    }
+
+    public void completeIntervention(ConversationSession session) {
+        SupportState state = session.getContextValue(SUPPORT_STATE_KEY);
+
+        if (state == null) {
+            LOG.warn("No intervention state found in session");
+            return;
+        }
+        conversationCompletedEvent.fireAsync(new ConversationCompletedEvent(
+                state.getConversationId(),
+                "support",
+                "without summary",
+                session.connectionId
+        ));
     }
 
     /**

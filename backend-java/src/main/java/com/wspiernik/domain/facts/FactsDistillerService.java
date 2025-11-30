@@ -153,9 +153,10 @@ public class FactsDistillerService {
      * Mark conversation as having facts extracted.
      */
     private void markConversationProcessed(Long conversationId) {
-        QuarkusTransaction.requiringNew().run(() -> {
+        //TODO: fix or remove this method (facts are extracted on the end of conversation anyway)
+       /* QuarkusTransaction.requiringNew().run(() -> {
             conversationRepository.markFactsExtracted(conversationId);
-        });
+        });*/
     }
 
     /**

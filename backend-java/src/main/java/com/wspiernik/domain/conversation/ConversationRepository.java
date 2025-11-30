@@ -36,6 +36,6 @@ public class ConversationRepository implements PanacheRepository<Conversation> {
      * Mark a conversation as having facts extracted.
      */
     public void markFactsExtracted(Long conversationId) {
-        update("factsExtracted = true WHERE id = ?1", conversationId);
+        update("factsExtracted = ?1 WHERE id = ?2", true, conversationId);
     }
 }

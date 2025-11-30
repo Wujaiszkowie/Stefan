@@ -108,7 +108,7 @@ public class DefaultSupportHandler implements SupportHandler {
                         session.conversationId,
                         "pending"
                 );
-
+                supportService.completeIntervention(session);
                 messageSender.send(connection, OutgoingMessage.of(
                         OutgoingMessage.SUPPORT_COMPLETED, completedPayload, message.requestId()));
 

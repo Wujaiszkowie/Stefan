@@ -74,6 +74,7 @@ public class FactsExtractor {
      * Parse JSON response from LLM into ExtractedFact objects.
      */
     private List<ExtractedFact> parseFactsJson(String response) {
+        LOG.debug("Parsing facts JSON from LLM response: \n" + response);
         if (response == null || response.isBlank()) {
             return List.of();
         }
@@ -97,8 +98,13 @@ public class FactsExtractor {
                     .toList();
 
         } catch (Exception e) {
+            //TODO nie wiem czemu to gónwo się nie parsuje
+            // niby w tym przykładzie zamknięcie tablicy powinno zamykać cały obiekt...
+            //[   {"tags": ["event", "symptom"], "value": "Ojciec złamał mi rękę. Czuję ból.", "severity": 7,
+            // "context": "Opiekun wspomina o złamaniu ręki przez tatę i odczuwanym bólu."}]
             LOG.warnf("Failed to parse facts JSON: %s. Response was: %s",
-                    e.getMessage(), response.substring(0, Math.min(200, response.length())));
+                    e.getMessage(), response, e);
+            e.printStackTrace();
             return List.of();
         }
     }

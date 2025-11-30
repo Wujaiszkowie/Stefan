@@ -174,7 +174,9 @@ public class DefaultInterventionHandler implements InterventionHandler {
         }
 
         // End session (user requested early termination)
+        interventionService.completeIntervention(session);
         sessionManager.endSession(connection);
+
 
         // Send completion acknowledgment
         InterventionCompletedPayload payload = new InterventionCompletedPayload(

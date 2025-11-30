@@ -9,16 +9,13 @@ import com.wspiernik.domain.intervention.ScenarioMatchingService.MatchResult;
 import com.wspiernik.infrastructure.llm.LlmClient;
 import com.wspiernik.infrastructure.llm.PromptTemplates;
 import com.wspiernik.infrastructure.llm.dto.LlmMessage;
-import com.wspiernik.domain.conversation.Conversation;
 import com.wspiernik.infrastructure.persistence.entity.CrisisScenario;
-import com.wspiernik.domain.conversation.ConversationRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -151,16 +148,20 @@ public class InterventionService {
 
         if (state.isGenericIntervention()) {
             // For generic intervention, always use LLM
+            LOG.debug("Generic intervention - generating response");
             response = generateGenericResponse(state, session, state.getSituationDescription());
         } else {
             // For scenario-based intervention
             state.moveToNextQuestion();
+            LOG.debug("Generic intervention - moving to next question");
 
             if (state.hasMoreQuestions()) {
                 // Generate next question with LLM
+                LOG.debug("Generic intervention - asking another question");
                 response = generateScenarioResponse(state, session, userMessage);
             } else {
                 // All questions answered, generate summary
+                LOG.debug("Generic intervention - no more questions, generating summary");
                 response = generateSummary(state, session);
                 state.setCompleted(true);
             }
@@ -265,19 +266,23 @@ public class InterventionService {
         try {
             String response = llmClient.generateWithHistory(messages);;
 
-            // Fire event for facts extraction
-            conversationCompletedEvent.fireAsync(new ConversationCompletedEvent(
-                    state.getConversationId(),
-                    "intervention",
-                    summary,
-                    session.connectionId
-            ));
+            notifyAboutCompletion(state, session, summary);
 
             return response;
         } catch (Exception e) {
             LOG.errorf(e, "Failed to generate summary");
             return "Interwencja zakończona. " + summary + "\n\nINTERVENTION_COMPLETE";
         }
+    }
+
+    public void completeIntervention(InterventionState state, ConversationSession session) {
+        String summary = state.buildSummary();
+        notifyAboutCompletion(state, session, summary);
+    }
+
+    private void notifyAboutCompletion(InterventionState state, ConversationSession session, String summary) {
+        // Fire event for facts extraction
+
     }
 
     /**
@@ -287,6 +292,22 @@ public class InterventionService {
         return QuarkusTransaction.requiringNew().call(() ->
                 factRepository.findAllFacts()
         );
+    }
+
+    public void completeIntervention(ConversationSession session) {
+        InterventionState state = session.getContextValue(INTERVENTION_STATE_KEY);
+
+        if (state == null) {
+            LOG.warn("No intervention state found in session");
+            return;
+        }
+        conversationCompletedEvent.fireAsync(new ConversationCompletedEvent(
+                state.getConversationId(),
+                "intervention",
+                "without summary",
+                session.connectionId
+        ));
+
     }
 
     /**
