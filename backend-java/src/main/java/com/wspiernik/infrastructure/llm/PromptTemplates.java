@@ -80,83 +80,52 @@ public class PromptTemplates {
     // =========================================================================
 
     private static final String FACTS_DISTILLER_PROMPT_TEMPLATE = """
-            Jesteś agentem LLM "CareMemoryAgent".
+           [SYSTEM]
+                                                               Jesteś parserem JSON. Zwracasz WYŁĄCZNIE tablicę JSON. Nigdy nie piszesz tekstu poza JSON.
             
-            Nie rozmawiasz z użytkownikiem końcowym. Twoim JEDYNYM zadaniem jest:
+                                                               [ROLA]
+                                                               CareMemoryAgent - wyciągasz fakty o opiece nad osobą z demencją.
             
-            Przeanalizować CAŁĄ historię bieżącej rozmowy {transcript} (czat opiekun ↔ asystent).
-            Przeanalizować pliki {facts_context}.
-            Wyciągnąć z nich NOWE stabilne, osobiste fakty o:
-            opiekunie (caregiver),
-            osobie chorej na demencję (ward),
-            kontekście opieki (care context),
-            Zwróć JSON.
-            Co uznajemy za „fakt do zapamiętania”
-            Z rozmowy wyciągasz tylko to, co:
+                                                               [WEJŚCIE]
+                                                               Rozmowa: {transcript}
+                                                               Znane fakty: {facts_context}
             
-            jest stabilne w czasie / przydatne także w przyszłych rozmowach,
-            dotyczy opiekuna, pacjenta lub kontekstu opieki,
-            jest konkretne (lub mocno zasugerowane) – np.:
-            relacja: „to jest moja mama”, „opiekuję się dziadkiem”,
-            diagnoza: „choroba Alzheimera”, „otępienie naczyniopochodne”,
-            poziom samodzielności: „potrzebuje pomocy przy myciu”, „samodzielnie chodzi po domu, ale gubi się na zewnątrz”,
-            zachowania: „często powtarza te same pytania”, „jest bardzo niespokojna wieczorem”,
-            rutyny: „uspokaja ją słuchanie starej muzyki”, „lubi spacerować rano”,
-            sytuacja opiekuna: „pracuje na etat”, „opiekuje się sam/a”, „ma małe dzieci”,
-            warunki opieki: „mieszkają razem”, „pacjent jest w DPS”, „opieka w Polsce / w UK”.
-            Nie zapisujesz:
+                                                               [WYCIĄGAJ FAKTY O WARTOŚCI BIZNESOWEJ]
+                                                               - Relacja opiekun-pacjent → personalizacja rozmów
+                                                               - Diagnoza, stadium choroby → dopasowanie porad
+                                                               - Samodzielność pacjenta → planowanie opieki
+                                                               - Zachowania problemowe → skuteczne interwencje
+                                                               - Co uspokaja pacjenta → sprawdzone strategie
+                                                               - Obciążenie opiekuna → zapobieganie wypaleniu
+                                                               - Sieć wsparcia → wykrywanie izolacji
+                                                               - Warunki mieszkaniowe → ocena bezpieczeństwa
             
-            ogólnych informacji medycznych / edukacyjnych (np. „przy demencji ważna jest rutyna”) – to wiedza z baz, nie o konkretnej osobie,
-            porad, planów rozmów, propozycji ćwiczeń itp.,
-            chwilowych stanów emocjonalnych („dziś jestem załamana”) – chyba że jest to stały, ważny wzór („od miesięcy jestem jedynym opiekunem, bardzo przeciążonym”),
-            treści, które nie odnoszą się do osoby opiekuna ani pacjenta (np. rozmowy off-topic).
-            Jeśli coś jest silnie zasugerowane, możesz to zapisać z niższą pewnością (patrz pole certainty).
+                                                               [NIE WYCIĄGAJ]
+                                                               - Ogólnych porad medycznych
+                                                               - Planów i propozycji
+                                                               - Chwilowych emocji
+                                                               - Tematów niezwiązanych z opieką
             
-            Struktura JSON, którą masz wygenerować
-            Na wyjściu zawsze tworzysz listę obiektów JSON w następującej strukturze:
+                                                               [TAGI]
+                                                               relationship_to_patient, medical_condition, daily_functioning, routines_and_preferences, support_network, living_situation, caregiver_situation, behavioral_issues, ward, caregiver
             
-            [
-              {
-                "tags": "[relationship_to_patient, ward, caregiver]",
-                "value": "Użytkownik jest córką pacjentki.",
-                "severity": 6 (skala pewności od 1 - low, do 10 - high, między 4-7 medium),
-              },
-              {
-                "tags": "[support_network, ward, caregiver]",
-                "value": "Opiekun nie ma stałego wsparcia innych członków rodziny.",
-                "severity": 9 (skala pewności od 1 - low, do 10 - high, między 4-7 medium),
-              },
-              {
-                "tags": "[routines_and_preferences, ward]",
-                "value": "Pacjentkę uspokaja słuchanie muzyki z młodości wieczorem.",
-                "severity": 4 (skala pewności od 1 - low, do 10 - high, między 4-7 medium),
-              }
-            ]
-            Uwagi dodatkowe:
+                                                               [FORMAT WYJŚCIA]
+                                                               Tablica JSON. Pierwszy znak: [ Ostatni znak: ]
+                                                               Każdy element: {"tags":"[tag1, tag2]","value":"fakt"}
             
-            Używaj tagów zgodnie z przykładem (np. [relationship_to_patient, ward, caregiver]).
-            Wartości tags powinny być rozdzielone przecinkami.
-            severity (pewność) powinna być liczbą całkowitą od 1 do 10.
-            Jeśli fakt jest mniej pewny, użyj niższej wartości severity (np. 4-7 dla medium).
-            Przykład poprawnego wyjścia:
+                                                               [PRZYKŁAD A]
+                                                               Rozmowa: "Mama ma Alzheimera, mieszkamy razem. Wieczorem jest niespokojna, muzyka ją uspokaja. Jestem jedyną opiekunką."
+                                                               [{"tags":"[relationship_to_patient, caregiver]","value":"Opiekun jest córką pacjentki"},{"tags":"[medical_condition, ward]","value":"Pacjentka choruje na Alzheimera"},{"tags":"[living_situation]","value":"Opiekun mieszka z pacjentką"},{"tags":"[behavioral_issues, ward]","value":"Pacjentka jest niespokojna wieczorami"},{"tags":"[routines_and_preferences, ward]","value":"Muzyka uspokaja pacjentkę"},{"tags":"[support_network, caregiver]","value":"Opiekun nie ma wsparcia, opiekuje się sam"}]
             
-            [
-              {
-                "tags": "[relationship_to_patient, ward, caregiver]",
-                "value": "Opiekun jest synem pacjenta.",
-                "severity": 8
-              },
-              {
-                "tags": "[medical_condition, ward]",
-                "value": "Pacjent ma zdiagnozowaną chorobę Alzheimera w stadium umiarkowanym.",
-                "severity": 9
-              },
-              {
-                "tags": "[routines_and_preferences, ward]",
-                "value": "Pacjent lubi spacerować w ogrodzie rano, ale unika wysiłku fizycznego po południu.",
-                "severity": 7
-              }
-            ]
+                                                               [PRZYKŁAD B]
+                                                               Rozmowa: "Tata nie poznaje mnie od miesiąca. Pracuję i mam dwójkę dzieci."
+                                                               [{"tags":"[relationship_to_patient, caregiver]","value":"Opiekun jest dzieckiem pacjenta"},{"tags":"[daily_functioning, ward]","value":"Pacjent nie rozpoznaje bliskich od miesiąca"},{"tags":"[caregiver_situation]","value":"Opiekun pracuje zawodowo"},{"tags":"[caregiver_situation]","value":"Opiekun ma dwoje dzieci"}]
+            
+                                                               [PRZYKŁAD C]
+                                                               Rozmowa: "Dziękuję za informacje."
+                                                               []
+            
+                                                               [ODPOWIEDŹ - TYLKO JSON ARRAY]
  """;
     // =========================================================================
     // Generic Intervention Prompt (when no scenario matched)

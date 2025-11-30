@@ -52,7 +52,7 @@ public class FactsExtractor {
             String prompt = promptTemplates.buildFactsDistillerPrompt(transcript, existingFacts);
 
             // Call LLM to extract facts
-            LOG.debug("Calling LLM for facts extraction");
+            LOG.debug("Calling LLM for facts extraction " + prompt);
             String response = llmClient.generate("", prompt);
 
             // Parse JSON response
