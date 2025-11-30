@@ -76,7 +76,6 @@ public class DefaultSurveyHandler implements SurveyHandler {
     public void message(WebSocketConnection connection, IncomingMessage message) {
         LOG.debugf("Survey message from %s: %s", connection.id(), message.getContent());
 
-        //FIXME history of conversation is taken from a session, not from repository
         // Check session exists
         ConversationSession session = sessionManager.getSession(connection);
         if (session == null || !"survey".equals(session.conversationType)) {
