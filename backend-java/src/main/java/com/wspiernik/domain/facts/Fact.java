@@ -1,9 +1,7 @@
 package com.wspiernik.domain.facts;
 
-import com.wspiernik.infrastructure.persistence.JsonToListConverter;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,7 +26,6 @@ public class Fact extends PanacheEntityBase {
     public Long conversationId;
 
     @Column(name = "fact_type")
-    @Convert(converter = JsonToListConverter.class)
     public String factType; // "symptom", "medication", "event", "condition", "limitation"
 
     @Column(name = "fact_value", columnDefinition = "TEXT")
