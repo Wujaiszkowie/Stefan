@@ -1,12 +1,8 @@
 package com.wspiernik.domain.facts;
 
+import com.wspiernik.infrastructure.persistence.JsonToStringListConverter;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +22,7 @@ public class Fact extends PanacheEntityBase {
     @Column(name = "conversation_id")
     public Long conversationId;
 
+    @Convert(converter = JsonToStringListConverter.class)
     @Column(name = "fact_type")
     public List<String> tags;
 

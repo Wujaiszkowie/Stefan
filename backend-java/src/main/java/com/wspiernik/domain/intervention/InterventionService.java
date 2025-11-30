@@ -18,6 +18,7 @@ import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service handling intervention business logic.
@@ -304,7 +305,7 @@ public class InterventionService {
         conversationCompletedEvent.fireAsync(new ConversationCompletedEvent(
                 state.getConversationId(),
                 "intervention",
-                "without summary",
+                session.messageHistory.stream().map(LlmMessage::toString).collect(Collectors.joining(",")),
                 session.connectionId
         ));
 
